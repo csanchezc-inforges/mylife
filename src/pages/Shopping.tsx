@@ -44,20 +44,29 @@ export function Shopping({ state, setState }: Props) {
     toast(`"${itemName}" añadido a la lista`)
   }
 
-  const copyList = async () => {
-    if (!state.shoppingList.length) { toast('La lista está vacía'); return }
+  const getListText = () => {
     const pendingFirst = [...state.shoppingList].sort((a, b) => (a.done ? 1 : 0) - (b.done ? 1 : 0))
     const lines = pendingFirst.map(i => {
       const qty = i.qty?.trim() ? ` (${i.qty})` : ''
       return `${i.done ? '✓' : '•'} ${i.name}${qty}`
     })
-    const text = `🛒 Lista de la compra\n\n${lines.join('\n')}`
+    return `🛒 Lista de la compra\n\n${lines.join('\n')}`
+  }
+
+  const copyList = async () => {
+    if (!state.shoppingList.length) { toast('La lista está vacía'); return }
     try {
-      await navigator.clipboard.writeText(text)
-      toast('✅ Lista copiada al portapapeles')
+      await navigator.clipboard.writeText(getListText())
+      toast('✅ Lista copiada')
     } catch {
       toast('No se pudo copiar')
     }
+  }
+
+  const shareWhatsApp = () => {
+    if (!state.shoppingList.length) { toast('La lista está vacía'); return }
+    const text = encodeURIComponent(getListText())
+    window.open(`https://wa.me/?text=${text}`, '_blank', 'noopener')
   }
 
   const sorted = [...state.shoppingList].sort((a, b) => (a.done ? 1 : 0) - (b.done ? 1 : 0))
@@ -77,10 +86,11 @@ export function Shopping({ state, setState }: Props) {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
-        <button type="button" className="btn btn-ghost btn-sm" onClick={copyList}>📋 Copiar lista</button>
-        <button type="button" className="btn btn-ghost btn-sm" onClick={clearDone}>Limpiar tachados</button>
-        <button type="button" className="btn btn-ghost btn-sm" onClick={clearAll}>Vaciar todo</button>
+      <div className="shopping-actions">
+        <button type="button" onClick={copyList} title="Copiar al portapapeles">📋 Copiar</button>
+        <button type="button" onClick={clearDone} title="Quitar los tachados">🗑 Limpiar</button>
+        <button type="button" onClick={clearAll} title="Vaciar toda la lista">Vaciar</button>
+        <button type="button" onClick={shareWhatsApp} title="Enviar por WhatsApp">WhatsApp</button>
       </div>
 
       {!state.shoppingList.length

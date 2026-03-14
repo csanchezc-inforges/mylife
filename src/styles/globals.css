@@ -286,6 +286,40 @@ textarea { resize: vertical; min-height: 80px; }
 }
 .food-content { position: relative; }
 
+/* Shopping actions: una sola línea compacta */
+.shopping-actions {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+  flex-wrap: nowrap;
+}
+.shopping-actions button {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text2);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .2s;
+}
+.shopping-actions button:hover {
+  background: var(--surface2);
+  color: var(--text);
+}
+.shopping-actions button:last-child {
+  background: rgba(37, 211, 102, 0.15);
+  color: #25d366;
+  border-color: rgba(37, 211, 102, 0.3);
+}
+.shopping-actions button:last-child:hover {
+  background: rgba(37, 211, 102, 0.25);
+}
+
 /* Page header */
 .page-title { font-family: 'DM Sans', sans-serif; font-size: 26px; font-weight: 700; letter-spacing: -0.3px; }
 .page-sub { color: var(--text2); font-size: 13px; margin-top: 2px; }
