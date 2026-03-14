@@ -177,7 +177,7 @@ export function Budget({ state, setState }: Props) {
             </div>
             <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: 4 }}>
               <div style={{ fontWeight: 700, fontSize: 16, fontFamily: 'DM Sans, sans-serif', color: 'var(--danger)' }}>-{e.amount.toFixed(2)} €</div>
-              <button type="button" className="btn btn-ghost btn-sm" onClick={() => openEditExpense(e)} style={{ padding: '4px 8px', fontSize: 12 }}>Editar</button>
+              <button type="button" className="btn btn-ghost btn-icon" onClick={() => openEditExpense(e)} style={{ padding: 6 }} aria-label="Editar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} width={18} height={18}><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
               <button type="button" onClick={() => setState(s => ({ ...s, expenses: s.expenses.filter(x => x.id !== e.id) }))} style={{ background: 'none', border: 'none', color: 'var(--text2)', cursor: 'pointer', fontSize: 18 }} aria-label="Eliminar">×</button>
             </div>
           </div>

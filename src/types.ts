@@ -95,6 +95,7 @@ export interface AppState {
   budget: Budget
   recipes: Recipe[]
   shoppingList: ShoppingItem[]
+  shoppingFavorites: string[]
   menuPlan: MenuPlan
   tasks: Task[]
   habits: Habit[]
@@ -128,6 +129,7 @@ export const DEFAULT_STATE: AppState = {
   budget: { monthly: 0 },
   recipes: [],
   shoppingList: [],
+  shoppingFavorites: [],
   menuPlan: {},
   tasks: [],
   habits: [],
