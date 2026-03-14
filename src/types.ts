@@ -112,13 +112,15 @@ export interface Category {
 }
 
 export const CATS: Record<string, Category> = {
-  food:      { label: 'Alimentación', emoji: '🛒', color: '#00e5c0' },
-  transport: { label: 'Transporte',   emoji: '🚗', color: '#a78bfa' },
-  leisure:   { label: 'Ocio',         emoji: '🎮', color: '#fb923c' },
-  health:    { label: 'Salud',        emoji: '💊', color: '#f87171' },
-  home:      { label: 'Hogar',        emoji: '🏠', color: '#60a5fa' },
-  clothes:   { label: 'Ropa',         emoji: '👕', color: '#f472b6' },
-  other:     { label: 'Otros',        emoji: '📦', color: '#94a3b8' },
+  food:          { label: 'Alimentación',  emoji: '🛒', color: '#00e5c0' },
+  transport:     { label: 'Transporte',    emoji: '🚗', color: '#a78bfa' },
+  leisure:       { label: 'Ocio',         emoji: '🎮', color: '#fb923c' },
+  health:        { label: 'Salud',        emoji: '💊', color: '#f87171' },
+  home:          { label: 'Hogar',        emoji: '🏠', color: '#60a5fa' },
+  clothes:       { label: 'Ropa',         emoji: '👕', color: '#f472b6' },
+  workshop:      { label: 'Taller',       emoji: '🔧', color: '#eab308' },
+  subscriptions: { label: 'Suscripciones', emoji: '📱', color: '#06b6d4' },
+  other:         { label: 'Otros',         emoji: '📦', color: '#94a3b8' },
 }
 
 export const DEFAULT_STATE: AppState = {

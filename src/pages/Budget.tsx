@@ -11,9 +11,16 @@ interface Props {
 
 export function Budget({ state, setState }: Props) {
   const [modal, setModal] = useState<'budget' | 'expense' | null>(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [catFilter, setCatFilter] = useState('all')
   const [form, setForm] = useState({ name: '', amount: '', date: todayStr(), category: 'food' })
   const canvasRef = useRef<HTMLCanvasElement>(null)
+
+  const openEditExpense = (e: { id: string; name: string; amount: number; date: string; category: string }) => {
+    setEditingId(e.id)
+    setForm({ name: e.name, amount: String(e.amount), date: e.date, category: e.category })
+    setModal('expense')
+  }
 
   const now = new Date()
   const t = todayStr()
@@ -73,8 +80,28 @@ export function Budget({ state, setState }: Props) {
     if (!form.name.trim()) { toast('Introduce una descripción'); return }
     const amount = parseFloat(form.amount)
     if (isNaN(amount) || amount <= 0) { toast('Introduce un importe válido'); return }
-    setState(s => ({ ...s, expenses: [...s.expenses, { id: uid(), name: form.name.trim(), amount, date: form.date, category: form.category }] }))
-    setModal(null); toast('✅ Gasto añadido')
+    if (editingId) {
+      setState(s => ({
+        ...s,
+        expenses: s.expenses.map(x =>
+          x.id === editingId
+            ? { ...x, name: form.name.trim(), amount, date: form.date, category: form.category }
+            : x
+        )
+      }))
+      toast('✅ Gasto actualizado')
+    } else {
+      setState(s => ({ ...s, expenses: [...s.expenses, { id: uid(), name: form.name.trim(), amount, date: form.date, category: form.category }] }))
+      toast('✅ Gasto añadido')
+    }
+    setModal(null)
+    setEditingId(null)
+    setForm({ name: '', amount: '', date: todayStr(), category: 'food' })
+  }
+
+  const closeExpenseModal = () => {
+    setModal(null)
+    setEditingId(null)
     setForm({ name: '', amount: '', date: todayStr(), category: 'food' })
   }
 
@@ -144,13 +171,14 @@ export function Budget({ state, setState }: Props) {
         : [...filtered].sort((a, b) => b.date.localeCompare(a.date)).map(e => (
           <div key={e.id} style={{ display: 'flex', alignItems: 'center', padding: '12px 14px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', marginBottom: 6 }}>
             <span style={{ fontSize: 20 }}>{CATS[e.category]?.emoji || '?'}</span>
-            <div style={{ flex: 1, padding: '0 10px' }}>
+            <div style={{ flex: 1, padding: '0 10px', cursor: 'pointer', minWidth: 0 }} onClick={() => openEditExpense(e)}>
               <div style={{ fontSize: 14, fontWeight: 500 }}>{e.name}</div>
               <div style={{ fontSize: 12, color: 'var(--text2)' }}>{formatDate(e.date)} · {CATS[e.category]?.label || e.category}</div>
             </div>
-            <div style={{ textAlign: 'right' }}>
+            <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: 4 }}>
               <div style={{ fontWeight: 700, fontSize: 16, fontFamily: 'DM Sans, sans-serif', color: 'var(--danger)' }}>-{e.amount.toFixed(2)} €</div>
-              <button onClick={() => setState(s => ({ ...s, expenses: s.expenses.filter(x => x.id !== e.id) }))} style={{ background: 'none', border: 'none', color: 'var(--text2)', cursor: 'pointer', fontSize: 18 }}>×</button>
+              <button type="button" className="btn btn-ghost btn-sm" onClick={() => openEditExpense(e)} style={{ padding: '4px 8px', fontSize: 12 }}>Editar</button>
+              <button type="button" onClick={() => setState(s => ({ ...s, expenses: s.expenses.filter(x => x.id !== e.id) }))} style={{ background: 'none', border: 'none', color: 'var(--text2)', cursor: 'pointer', fontSize: 18 }} aria-label="Eliminar">×</button>
             </div>
           </div>
         ))
@@ -168,8 +196,8 @@ export function Budget({ state, setState }: Props) {
       )}
 
       {modal === 'expense' && (
-        <Modal onClose={() => setModal(null)}>
-          <div className="modal-title">Añadir gasto</div>
+        <Modal onClose={closeExpenseModal}>
+          <div className="modal-title">{editingId ? 'Editar gasto' : 'Añadir gasto'}</div>
           <div className="input-group">
             <label className="input-label">Descripción</label>
             <input autoFocus value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="ej: Supermercado" />
@@ -190,7 +218,7 @@ export function Budget({ state, setState }: Props) {
               {Object.entries(CATS).map(([k, v]) => <option key={k} value={k}>{v.emoji} {v.label}</option>)}
             </select>
           </div>
-          <button className="btn btn-primary btn-full" onClick={saveExpense}>Añadir gasto</button>
+          <button className="btn btn-primary btn-full" onClick={saveExpense}>{editingId ? 'Guardar cambios' : 'Añadir gasto'}</button>
         </Modal>
       )}
     </div>
