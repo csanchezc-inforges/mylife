@@ -52,26 +52,28 @@ export async function generateRecipeAI(
     return parseRecipeJSON(data.content[0].text)
   }
 
-  // OpenAI via CORS proxy (required for browser-side calls)
+  // OpenAI vía proxy CORS (necesario en navegador/PWA; en standalone puede fallar según red)
   if (hasOpenAI) {
-    const PROXY = 'https://corsproxy.io/?url='
-    const endpoint = PROXY + encodeURIComponent('https://api.openai.com/v1/chat/completions')
-    const res = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + config.openaiKey,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        max_tokens: 1200,
-        response_format: { type: 'json_object' },
-        messages: [
-          { role: 'system', content: SYS_PROMPT },
-          { role: 'user', content: userPrompt },
-        ],
-      }),
+    const openAiUrl = 'https://api.openai.com/v1/chat/completions'
+    const body = JSON.stringify({
+      model: 'gpt-4o-mini',
+      max_tokens: 1200,
+      response_format: { type: 'json_object' },
+      messages: [
+        { role: 'system', content: SYS_PROMPT },
+        { role: 'user', content: userPrompt },
+      ],
     })
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + config.openaiKey,
+    }
+    const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(openAiUrl)
+    let res = await fetch(proxyUrl, { method: 'POST', headers, body })
+    if (!res.ok) {
+      const retry = await fetch(proxyUrl, { method: 'POST', headers, body })
+      if (retry.ok) res = retry
+    }
     const data = await res.json()
     if (!res.ok) throw new Error(data.error?.message ?? `Error OpenAI: ${res.status}`)
     return parseRecipeJSON(data.choices[0].message.content)
