@@ -32,9 +32,30 @@ function weatherEmoji(code: number): string {
   return '🌡'
 }
 
+type HourlyItem = { time: string; temp: number; code: number }
+type DailyItem = { date: string; min: number; max: number; code: number }
+
+type WeatherData = {
+  temp: number
+  tempMin: number
+  tempMax: number
+  code: number
+  city?: string
+  hourly: HourlyItem[]
+  daily: DailyItem[]
+}
+
 export function Dashboard({ state, onToggleHabit, onNavigate }: Props) {
-  const [weather, setWeather] = useState<{ temp: number; code: number; city?: string } | null>(null)
+  const [weather, setWeather] = useState<WeatherData | null>(null)
   const [weatherError, setWeatherError] = useState<string | null>(null)
+  const [weatherDetailOpen, setWeatherDetailOpen] = useState(false)
+
+  useEffect(() => {
+    if (!weatherDetailOpen) return
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') setWeatherDetailOpen(false) }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [weatherDetailOpen])
 
   useEffect(() => {
     if (!navigator.geolocation) return
@@ -42,21 +63,39 @@ export function Dashboard({ state, onToggleHabit, onNavigate }: Props) {
       async (pos) => {
         const { latitude, longitude } = pos.coords
         try {
-          const res = await fetch(
-            `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code`
-          )
+          const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code&hourly=temperature_2m,weather_code&daily=temperature_2m_min,temperature_2m_max,weather_code&timezone=auto`
+          const res = await fetch(url)
           const data = await res.json()
-          if (data.current) {
+          if (data.current && data.hourly?.time && data.daily?.time) {
             let city: string | undefined
             try {
               const geo = await fetch(`https://geocoding-api.open-meteo.com/v1/reverse?latitude=${latitude}&longitude=${longitude}&count=1`)
               const geoData = await geo.json()
               city = geoData.results?.[0]?.name
             } catch {}
+            const today = new Date().toISOString().slice(0, 10)
+            const daily = (data.daily.time as string[]).map((date: string, i: number) => ({
+              date,
+              min: Math.round((data.daily.temperature_2m_min as number[])[i]),
+              max: Math.round((data.daily.temperature_2m_max as number[])[i]),
+              code: (data.daily.weather_code as number[])[i] ?? 0,
+            }))
+            const hourly: HourlyItem[] = (data.hourly.time as string[]).map((time: string, i: number) => ({
+              time,
+              temp: Math.round((data.hourly.temperature_2m as number[])[i]),
+              code: (data.hourly.weather_code as number[])[i] ?? 0,
+            }))
+            const todayIndex = daily.findIndex((d: DailyItem) => d.date === today)
+            const tempMin = todayIndex >= 0 ? daily[todayIndex].min : data.current.temperature_2m
+            const tempMax = todayIndex >= 0 ? daily[todayIndex].max : data.current.temperature_2m
             setWeather({
               temp: Math.round(data.current.temperature_2m),
+              tempMin,
+              tempMax,
               code: data.current.weather_code,
               city,
+              hourly,
+              daily,
             })
           }
         } catch {
@@ -112,18 +151,69 @@ export function Dashboard({ state, onToggleHabit, onNavigate }: Props) {
           <div style={{ color: 'var(--text2)', fontSize: 13, marginTop: 2 }}>{dateStr}</div>
         </div>
         {(weather || weatherError) && (
-          <div className="weather-widget">
+          <div
+            className={`weather-widget${weather ? ' weather-widget-clickable' : ''}`}
+            onClick={() => weather && setWeatherDetailOpen(true)}
+            role={weather ? 'button' : undefined}
+            aria-label={weather ? 'Ver previsión detallada' : undefined}
+          >
             {weather ? (
               <>
                 <span style={{ fontSize: 28, lineHeight: 1 }}>{weatherEmoji(weather.code)}</span>
                 <div>
-                  <div style={{ fontSize: 20, fontWeight: 700, fontFamily: 'DM Sans, sans-serif' }}>{weather.temp}°</div>
+                  <div style={{ fontSize: 20, fontWeight: 700, fontFamily: 'DM Sans, sans-serif' }}>
+                    {weather.temp}° <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text2)' }}>{weather.tempMin}°–{weather.tempMax}°</span>
+                  </div>
                   <div style={{ fontSize: 11, color: 'var(--text2)' }}>{weatherLabel(weather.code)}{weather.city ? ` · ${weather.city}` : ''}</div>
                 </div>
               </>
             ) : (
               <div style={{ fontSize: 12, color: 'var(--text2)' }}>{weatherError}</div>
             )}
+          </div>
+        )}
+        {weatherDetailOpen && weather && (
+          <div className="modal-overlay" onClick={() => setWeatherDetailOpen(false)}>
+            <div className="modal weather-detail-modal" onClick={e => e.stopPropagation()}>
+              <div className="modal-handle" />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                <h2 className="modal-title" style={{ margin: 0 }}>Tiempo</h2>
+                <button type="button" className="modal-close-btn" onClick={() => setWeatherDetailOpen(false)} aria-label="Cerrar">×</button>
+              </div>
+              {weather.city && <p style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 12 }}>{weather.city}</p>}
+              {/* Por horas hasta fin de hoy */}
+              <div className="section-label">Hoy por horas</div>
+              <div className="weather-hourly">
+                {(() => {
+                  const today = new Date().toISOString().slice(0, 10)
+                  const now = new Date()
+                  const restOfDay = weather.hourly.filter(h => {
+                    const d = new Date(h.time)
+                    return h.time.startsWith(today) && d >= new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours())
+                  })
+                  return restOfDay.slice(0, 24).map(h => (
+                    <div key={h.time} className="weather-hour-item">
+                      <span className="weather-hour-time">{new Date(h.time).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</span>
+                      <span className="weather-hour-emoji">{weatherEmoji(h.code)}</span>
+                      <span className="weather-hour-temp">{h.temp}°</span>
+                    </div>
+                  ))
+                })()}
+              </div>
+              {/* Próximos días */}
+              <div className="section-label" style={{ marginTop: 16 }}>Próximos días</div>
+              <div className="weather-daily">
+                {weather.daily.slice(0, 7).map(d => (
+                  <div key={d.date} className="weather-day-item">
+                    <span className="weather-day-date">
+                      {new Date(d.date).toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' })}
+                    </span>
+                    <span className="weather-day-emoji">{weatherEmoji(d.code)}</span>
+                    <span className="weather-day-temps">{d.min}° – {d.max}°</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         )}
       </div>

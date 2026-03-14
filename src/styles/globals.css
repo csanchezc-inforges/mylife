@@ -133,6 +133,7 @@ nav.bottom-nav {
 }
 .nav-center-logo {
   flex: 0 0 56px;
+  min-width: 56px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -141,8 +142,11 @@ nav.bottom-nav {
 .nav-app-icon {
   width: 32px;
   height: 32px;
+  min-width: 32px;
+  min-height: 32px;
   border-radius: 50%;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center;
 }
 .nav-badge {
   position: absolute;
@@ -331,6 +335,49 @@ textarea { resize: vertical; min-height: 80px; }
   border-radius: var(--radius-sm);
   flex-shrink: 0;
 }
+.weather-widget-clickable {
+  cursor: pointer;
+  transition: background .2s, border-color .2s;
+}
+.weather-widget-clickable:hover { background: var(--surface2); border-color: var(--border2); }
+
+.weather-detail-modal { max-width: 420px; max-height: 85vh; overflow-y: auto; }
+.weather-hourly {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 8px 0;
+  margin: 0 -4px;
+  -webkit-overflow-scrolling: touch;
+}
+.weather-hour-item {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  min-width: 64px;
+}
+.weather-hour-time { font-size: 11px; color: var(--text2); }
+.weather-hour-emoji { font-size: 22px; line-height: 1; }
+.weather-hour-temp { font-size: 15px; font-weight: 700; font-family: 'DM Sans', sans-serif; }
+.weather-daily { display: flex; flex-direction: column; gap: 6px; }
+.weather-day-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.weather-day-date { flex: 1; font-size: 14px; }
+.weather-day-emoji { font-size: 24px; line-height: 1; }
+.weather-day-temps { font-size: 14px; font-weight: 600; font-family: 'DM Sans', sans-serif; color: var(--text2); }
 
 /* Page header */
 .page-title { font-family: 'DM Sans', sans-serif; font-size: 26px; font-weight: 700; letter-spacing: -0.3px; }
@@ -373,6 +420,16 @@ textarea { resize: vertical; min-height: 80px; }
   margin: 0 auto 20px;
 }
 .modal-title { font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: 20px; margin-bottom: 20px; }
+.modal-close-btn {
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text2); font-size: 22px; line-height: 1;
+  cursor: pointer; font-family: inherit;
+  transition: background .2s, color .2s;
+}
+.modal-close-btn:hover { background: var(--surface2); color: var(--text); }
 
 /* Toast */
 .toast {
