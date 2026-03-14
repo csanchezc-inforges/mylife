@@ -204,14 +204,14 @@ textarea { resize: vertical; min-height: 80px; }
 
 /* Section label */
 .section-label {
-  font-family: 'Syne', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 13px; font-weight: 700;
   color: var(--text2); text-transform: uppercase; letter-spacing: 1px;
   margin-bottom: 10px;
 }
 
 /* Page header */
-.page-title { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
+.page-title { font-family: 'DM Sans', sans-serif; font-size: 26px; font-weight: 700; letter-spacing: -0.3px; }
 .page-sub { color: var(--text2); font-size: 13px; margin-top: 2px; }
 
 /* Empty state */
@@ -243,7 +243,7 @@ textarea { resize: vertical; min-height: 80px; }
   background: var(--border2); border-radius: 2px;
   margin: 0 auto 20px;
 }
-.modal-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 20px; margin-bottom: 20px; }
+.modal-title { font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: 20px; margin-bottom: 20px; }
 
 /* Toast */
 .toast {
