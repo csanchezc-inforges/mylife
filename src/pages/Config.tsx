@@ -148,6 +148,17 @@ export function Config({ state, setState, onReset }: Props) {
         <button className="btn btn-primary btn-full" onClick={saveKeys}>Guardar configuración</button>
       </Section>
 
+      {/* Theme */}
+      <Section title="Apariencia">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', marginBottom: 8 }}>
+          <div>
+            <div style={{ fontWeight: 500, fontSize: 15 }}>Modo claro</div>
+            <div style={{ fontSize: 12, color: 'var(--text2)' }}>Cambiar entre tema claro y oscuro</div>
+          </div>
+          <div className={`toggle${state.theme === 'light' ? ' on' : ''}`} onClick={() => setState(s => ({ ...s, theme: s.theme === 'light' ? 'dark' : 'light' }))} />
+        </div>
+      </Section>
+
       {/* Notifications */}
       <Section title="Notificaciones">
         {[

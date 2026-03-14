@@ -78,6 +78,8 @@ export interface NotifConfig {
   daily: boolean
 }
 
+export type Theme = 'light' | 'dark'
+
 export interface AppState {
   expenses: Expense[]
   budget: Budget
@@ -89,6 +91,7 @@ export interface AppState {
   habitLogs: HabitLogs
   config: Config
   notif: NotifConfig
+  theme: Theme
 }
 
 export interface Category {
@@ -118,4 +121,5 @@ export const DEFAULT_STATE: AppState = {
   habitLogs: {},
   config: { provider: 'claude', claudeKey: '', openaiKey: '' },
   notif: { habits: false, daily: false },
+  theme: 'dark',
 }

@@ -25,6 +25,10 @@ export default function App() {
     return () => { window.removeEventListener('online', on); window.removeEventListener('offline', off) }
   }, [])
 
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', state.theme)
+  }, [state.theme])
+
   const toggleHabit = useCallback((id: string) => {
     const t = todayStr()
     setState(s => {
