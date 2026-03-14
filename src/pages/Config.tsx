@@ -79,11 +79,10 @@ export function Config({ state, setState, onReset }: Props) {
             style={{
               display: 'flex', alignItems: 'center', gap: 14,
               padding: '14px 16px',
-              background: 'var(--surface)',
+              background: state.config.provider === p.id ? 'rgba(0,229,192,0.06)' : 'var(--surface)',
               border: `2px solid ${state.config.provider === p.id ? 'var(--accent)' : 'var(--border)'}`,
               borderRadius: 'var(--radius-sm)',
               cursor: 'pointer', transition: 'all .2s',
-              background: state.config.provider === p.id ? 'rgba(0,229,192,0.06)' : 'var(--surface)',
               marginBottom: 8,
             } as React.CSSProperties}
           >
