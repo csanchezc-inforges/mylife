@@ -1,9 +1,17 @@
 {
+  "version": 2,
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "routes": [
-    { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "/index.html" }
+  "rewrites": [
+    { "source": "/assets/(.*)", "destination": "/assets/$1" },
+    { "source": "/icon-192.png", "destination": "/icon-192.png" },
+    { "source": "/icon-512.png", "destination": "/icon-512.png" },
+    { "source": "/favicon.ico", "destination": "/favicon.ico" },
+    { "source": "/manifest.webmanifest", "destination": "/manifest.webmanifest" },
+    { "source": "/sw.js", "destination": "/sw.js" },
+    { "source": "/workbox-(.*).js", "destination": "/workbox-$1.js" },
+    { "source": "/registerSW.js", "destination": "/registerSW.js" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
     {
