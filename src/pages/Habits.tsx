@@ -77,7 +77,7 @@ export function Habits({ state, setState }: Props) {
           return (
             <div key={h.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 16, marginBottom: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                <div className="syne" style={{ fontWeight: 700, fontSize: 16 }}>{h.emoji} {h.name}</div>
+                <div style={{ fontWeight: 700, fontSize: 16, fontFamily: 'DM Sans, sans-serif' }}>{h.emoji} {h.name}</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   {streak > 0 && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(251,191,36,0.12)', color: 'var(--warning)', padding: '4px 10px', borderRadius: 99, fontSize: 13, fontWeight: 700 }}>

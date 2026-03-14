@@ -124,7 +124,7 @@ function RecipeCard({ recipe, onAddToShop, onSave, onDelete, isNew }: {
     <div className={`card${isNew ? ' card-glow' : ''}`} style={{ marginBottom: 12 }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: open ? 12 : 0 }}>
         <div onClick={() => setOpen(o => !o)} style={{ cursor: 'pointer', flex: 1 }}>
-          <div className="syne" style={{ fontWeight: 700, fontSize: 16 }}>{recipe.name}</div>
+          <div style={{ fontWeight: 700, fontSize: 16, fontFamily: 'DM Sans, sans-serif' }}>{recipe.name}</div>
           <div style={{ fontSize: 12, color: 'var(--text2)', marginTop: 3 }}>⏱ {recipe.time} · 👥 {recipe.servings} · {recipe.difficulty}</div>
         </div>
         {onDelete && <button onClick={onDelete} style={{ background: 'none', border: 'none', color: 'var(--text2)', cursor: 'pointer', fontSize: 20, padding: '0 4px' }}>×</button>}

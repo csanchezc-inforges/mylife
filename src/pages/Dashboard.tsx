@@ -48,7 +48,7 @@ export function Dashboard({ state, onToggleHabit, onNavigate }: Props) {
     <div className="page-wrap">
       {/* Greeting */}
       <div style={{ marginBottom: 24 }}>
-        <div className="syne" style={{ fontSize: 22, fontWeight: 800 }}>{greet} 👋</div>
+        <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'DM Sans, sans-serif' }}>{greet} 👋</div>
         <div style={{ color: 'var(--text2)', fontSize: 13, marginTop: 2 }}>{dateStr}</div>
       </div>
 
@@ -59,7 +59,7 @@ export function Dashboard({ state, onToggleHabit, onNavigate }: Props) {
         borderRadius: 'var(--radius)', padding: 20, marginBottom: 16, position: 'relative', overflow: 'hidden'
       }}>
         <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text2)', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 4 }}>Diferencial hoy</div>
-        <div className="syne" style={{ fontSize: 36, fontWeight: 800, color: diffDay >= 0 ? 'var(--accent)' : 'var(--danger)' }}>
+        <div style={{ fontSize: 36, fontWeight: 700, fontFamily: 'DM Sans, sans-serif', color: diffDay >= 0 ? 'var(--accent)' : 'var(--danger)' }}>
           {diffDay >= 0 ? '+' : ''}{diffDay.toFixed(2)} €
         </div>
         <div style={{ fontSize: 13, color: 'var(--text2)', marginTop: 4 }}>
@@ -86,7 +86,7 @@ export function Dashboard({ state, onToggleHabit, onNavigate }: Props) {
           { label: 'Compra', value: shopPend },
         ].map(s => (
           <div key={s.label} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 16, textAlign: 'center' }}>
-            <div className="syne" style={{ fontSize: 24, fontWeight: 800 }}>{s.value}</div>
+            <div style={{ fontSize: 24, fontWeight: 700, fontFamily: 'DM Sans, sans-serif' }}>{s.value}</div>
             <div style={{ fontSize: 11, color: 'var(--text2)', textTransform: 'uppercase', letterSpacing: '.5px', marginTop: 2 }}>{s.label}</div>
           </div>
         ))}
@@ -129,7 +129,7 @@ export function Dashboard({ state, onToggleHabit, onNavigate }: Props) {
                 {done && <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} width={13} height={13}><path d="M20 6L9 17l-5-5"/></svg>}
               </div>
               <span style={{ flex: 1, fontSize: 14 }}>{h.emoji} {h.name}</span>
-              {streak > 0 && <span style={{ fontFamily: 'Syne', fontSize: 12, fontWeight: 700, color: 'var(--warning)' }}>🔥{streak}</span>}
+              {streak > 0 && <span style={{ fontFamily: 'DM Sans, sans-serif', fontSize: 12, fontWeight: 700, color: 'var(--warning)' }}>🔥{streak}</span>}
             </div>
           )
         })}

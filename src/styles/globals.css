@@ -74,7 +74,7 @@ body::before {
 ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
 
 /* Typography */
-.syne { font-family: 'Syne', sans-serif !important; }
+.syne { font-family: 'DM Sans', sans-serif !important; }
 
 /* Page */
 .page-wrap {

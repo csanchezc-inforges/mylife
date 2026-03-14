@@ -91,14 +91,14 @@ export function Budget({ state, setState }: Props) {
       <div className="grid-2" style={{ marginBottom: 14 }}>
         <div className={`diff-card ${diffDay >= 0 ? 'positive' : 'negative'}`}>
           <div style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.5px', opacity: .7 }}>Hoy</div>
-          <div className="syne" style={{ fontSize: 28, fontWeight: 800, color: diffDay >= 0 ? 'var(--accent)' : 'var(--danger)' }}>
+          <div style={{ fontSize: 28, fontWeight: 700, fontFamily: 'DM Sans, sans-serif', color: diffDay >= 0 ? 'var(--accent)' : 'var(--danger)' }}>
             {diffDay >= 0 ? '+' : ''}{diffDay.toFixed(2)} €
           </div>
           <div style={{ fontSize: 12, opacity: .7 }}>Objetivo: {daily.toFixed(2)} €</div>
         </div>
         <div className={`diff-card ${diffAcc >= 0 ? 'positive' : 'negative'}`}>
           <div style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.5px', opacity: .7 }}>Acumulado</div>
-          <div className="syne" style={{ fontSize: 28, fontWeight: 800, color: diffAcc >= 0 ? 'var(--accent)' : 'var(--danger)' }}>
+          <div style={{ fontSize: 28, fontWeight: 700, fontFamily: 'DM Sans, sans-serif', color: diffAcc >= 0 ? 'var(--accent)' : 'var(--danger)' }}>
             {diffAcc >= 0 ? '+' : ''}{diffAcc.toFixed(2)} €
           </div>
           <div style={{ fontSize: 12, opacity: .7 }}>Día {now.getDate()} de {daysM}</div>
@@ -112,9 +112,9 @@ export function Budget({ state, setState }: Props) {
           <button className="btn btn-ghost btn-sm" onClick={() => setModal('budget')}>Editar</button>
         </div>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 10 }}>
-          <span className="syne" style={{ fontSize: 28, fontWeight: 800 }}>{monthExp.toFixed(2)} €</span>
+          <span style={{ fontSize: 28, fontWeight: 700, fontFamily: 'DM Sans, sans-serif' }}>{monthExp.toFixed(2)} €</span>
           <span style={{ color: 'var(--text2)', fontSize: 14 }}>de</span>
-          <span className="syne" style={{ fontSize: 20, fontWeight: 700, color: 'var(--text2)' }}>{state.budget.monthly > 0 ? state.budget.monthly + ' €' : '—'}</span>
+          <span style={{ fontSize: 20, fontWeight: 700, fontFamily: 'DM Sans, sans-serif', color: 'var(--text2)' }}>{state.budget.monthly > 0 ? state.budget.monthly + ' €' : '—'}</span>
         </div>
         <div className="progress-wrap">
           <div className="progress-bar" style={{ width: pct + '%', background: pct > 90 ? 'var(--danger)' : pct > 70 ? 'var(--warning)' : 'var(--accent)' }} />
@@ -123,7 +123,7 @@ export function Budget({ state, setState }: Props) {
 
       {/* Chart */}
       <div className="card" style={{ marginBottom: 14 }}>
-        <div className="syne" style={{ fontWeight: 700, marginBottom: 12 }}>Por categoría</div>
+        <div style={{ fontWeight: 700, marginBottom: 12, fontFamily: 'DM Sans, sans-serif' }}>Por categoría</div>
         <canvas ref={canvasRef} style={{ width: '100%', height: 160 }} />
       </div>
 
@@ -149,7 +149,7 @@ export function Budget({ state, setState }: Props) {
               <div style={{ fontSize: 12, color: 'var(--text2)' }}>{formatDate(e.date)} · {CATS[e.category]?.label || e.category}</div>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <div className="syne" style={{ fontWeight: 700, fontSize: 16, color: 'var(--danger)' }}>-{e.amount.toFixed(2)} €</div>
+              <div style={{ fontWeight: 700, fontSize: 16, fontFamily: 'DM Sans, sans-serif', color: 'var(--danger)' }}>-{e.amount.toFixed(2)} €</div>
               <button onClick={() => setState(s => ({ ...s, expenses: s.expenses.filter(x => x.id !== e.id) }))} style={{ background: 'none', border: 'none', color: 'var(--text2)', cursor: 'pointer', fontSize: 18 }}>×</button>
             </div>
           </div>

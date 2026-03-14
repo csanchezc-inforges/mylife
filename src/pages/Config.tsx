@@ -200,7 +200,7 @@ export function Config({ state, setState, onReset }: Props) {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div style={{ marginBottom: 28 }}>
-      <div className="syne" style={{ fontWeight: 700, fontSize: 16, marginBottom: 14 }}>{title}</div>
+      <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 14, fontFamily: 'DM Sans, sans-serif' }}>{title}</div>
       {children}
     </div>
   )
