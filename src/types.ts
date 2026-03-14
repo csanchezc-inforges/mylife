@@ -1,4 +1,5 @@
-export type Page = 'dash' | 'budget' | 'recipes' | 'shop' | 'menu' | 'tasks' | 'habits' | 'config'
+export type Page = 'dash' | 'budget' | 'food' | 'tasks' | 'habits' | 'config'
+export type FoodSubPage = 'recipes' | 'shop' | 'menu'
 export type Priority = 'high' | 'mid' | 'low'
 export type Provider = 'claude' | 'openai'
 export type MealSlot = 'breakfast' | 'lunch' | 'dinner'
@@ -80,6 +81,15 @@ export interface NotifConfig {
 
 export type Theme = 'light' | 'dark'
 
+export const ACCENT_COLORS: { id: string; name: string; hex: string }[] = [
+  { id: 'teal', name: 'Teal', hex: '#00e5c0' },
+  { id: 'green', name: 'Verde', hex: '#22c55e' },
+  { id: 'blue', name: 'Azul', hex: '#3b82f6' },
+  { id: 'violet', name: 'Violeta', hex: '#8b5cf6' },
+  { id: 'pink', name: 'Rosa', hex: '#ec4899' },
+  { id: 'orange', name: 'Naranja', hex: '#f97316' },
+]
+
 export interface AppState {
   expenses: Expense[]
   budget: Budget
@@ -92,6 +102,7 @@ export interface AppState {
   config: Config
   notif: NotifConfig
   theme: Theme
+  accentColor: string
 }
 
 export interface Category {
@@ -122,4 +133,5 @@ export const DEFAULT_STATE: AppState = {
   config: { provider: 'claude', claudeKey: '', openaiKey: '' },
   notif: { habits: false, daily: false },
   theme: 'dark',
+  accentColor: '#00e5c0',
 }

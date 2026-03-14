@@ -107,7 +107,7 @@ export function Dashboard({ state, onToggleHabit, onNavigate }: Props) {
         ) : (
           <div style={{ color: 'var(--text2)', fontSize: 14 }}>
             Sin menú para hoy ·{' '}
-            <span style={{ color: 'var(--accent)', cursor: 'pointer' }} onClick={() => onNavigate('menu')}>Planificar</span>
+            <span style={{ color: 'var(--accent)', cursor: 'pointer' }} onClick={() => onNavigate('food#menu')}>Planificar</span>
           </div>
         )}
       </div>

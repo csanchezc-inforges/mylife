@@ -1,13 +1,11 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Page } from './types'
+import { Page, FoodSubPage } from './types'
 import { useStore, todayStr } from './hooks/useStore'
 import { Nav } from './components/Nav'
 import { Toast } from './components/Toast'
+import { FoodSection } from './components/FoodSection'
 import { Dashboard } from './pages/Dashboard'
 import { Budget } from './pages/Budget'
-import { Recipes } from './pages/Recipes'
-import { Shopping } from './pages/Shopping'
-import { MenuPlanner } from './pages/MenuPlanner'
 import { Tasks } from './pages/Tasks'
 import { Habits } from './pages/Habits'
 import { Config } from './pages/Config'
@@ -31,6 +29,7 @@ interface BeforeInstallPromptEvent extends Event {
 export default function App() {
   const { state, setState, resetState } = useStore()
   const [page, setPage] = useState<Page>('dash')
+  const [foodSubPage, setFoodSubPage] = useState<FoodSubPage>('recipes')
   const [online, setOnline] = useState(navigator.onLine)
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [showInstallBanner, setShowInstallBanner] = useState(false)
@@ -86,6 +85,10 @@ export default function App() {
     document.documentElement.setAttribute('data-theme', state.theme)
   }, [state.theme])
 
+  useEffect(() => {
+    document.documentElement.style.setProperty('--accent', state.accentColor || '#00e5c0')
+  }, [state.accentColor])
+
   const toggleHabit = useCallback((id: string) => {
     const t = todayStr()
     setState(s => {
@@ -97,17 +100,19 @@ export default function App() {
     })
   }, [setState])
 
-  const navigate = useCallback((p: string) => setPage(p as Page), [])
+  const navigate = useCallback((p: string) => {
+    const [pagePart, sub] = p.split('#') as [Page, FoodSubPage?]
+    setPage(pagePart)
+    if (pagePart === 'food' && sub && (sub === 'recipes' || sub === 'shop' || sub === 'menu')) setFoodSubPage(sub)
+  }, [])
 
   const pages: Record<Page, React.ReactNode> = {
-    dash:    <Dashboard key="dash"    state={state} onToggleHabit={toggleHabit} onNavigate={navigate} />,
-    budget:  <Budget    key="budget"  state={state} setState={setState} />,
-    recipes: <Recipes   key="recipes" state={state} setState={setState} onNavigate={navigate} />,
-    shop:    <Shopping  key="shop"    state={state} setState={setState} />,
-    menu:    <MenuPlanner key="menu"  state={state} setState={setState} />,
-    tasks:   <Tasks     key="tasks"   state={state} setState={setState} />,
-    habits:  <Habits    key="habits"  state={state} setState={setState} />,
-    config:  <Config    key="config"  state={state} setState={setState} onReset={resetState} />,
+    dash:   <Dashboard key="dash"   state={state} onToggleHabit={toggleHabit} onNavigate={navigate} />,
+    budget: <Budget    key="budget" state={state} setState={setState} />,
+    food:   <FoodSection key="food" state={state} setState={setState} subPage={foodSubPage} setSubPage={setFoodSubPage} onNavigate={navigate} />,
+    tasks:  <Tasks     key="tasks"  state={state} setState={setState} />,
+    habits: <Habits    key="habits" state={state} setState={setState} />,
+    config: <Config    key="config" state={state} setState={setState} onReset={resetState} />,
   }
 
   const canInstall = Boolean(installPrompt)

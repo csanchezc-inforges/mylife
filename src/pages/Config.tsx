@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { AppState, Provider } from '../types'
+import { AppState, Provider, ACCENT_COLORS } from '../types'
 import { toast } from '../components/Toast'
 
 interface Props {
@@ -150,12 +150,32 @@ export function Config({ state, setState, onReset }: Props) {
 
       {/* Theme */}
       <Section title="Apariencia">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', marginBottom: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', marginBottom: 12 }}>
           <div>
             <div style={{ fontWeight: 500, fontSize: 15 }}>Modo claro</div>
             <div style={{ fontSize: 12, color: 'var(--text2)' }}>Cambiar entre tema claro y oscuro</div>
           </div>
           <div className={`toggle${state.theme === 'light' ? ' on' : ''}`} onClick={() => setState(s => ({ ...s, theme: s.theme === 'light' ? 'dark' : 'light' }))} />
+        </div>
+        <div style={{ marginBottom: 8 }}>
+          <div style={{ fontWeight: 500, fontSize: 14, marginBottom: 10 }}>Color del tema</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+            {ACCENT_COLORS.map(c => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => setState(s => ({ ...s, accentColor: c.hex }))}
+                style={{
+                  width: 40, height: 40, borderRadius: '50%',
+                  background: c.hex,
+                  border: (state.accentColor || '#00e5c0') === c.hex ? '3px solid var(--text)' : '2px solid var(--border)',
+                  boxShadow: (state.accentColor || '#00e5c0') === c.hex ? '0 0 0 2px var(--bg)' : 'none',
+                  cursor: 'pointer',
+                }}
+                title={c.name}
+              />
+            ))}
+          </div>
         </div>
       </Section>
 

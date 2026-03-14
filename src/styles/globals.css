@@ -131,6 +131,19 @@ nav.bottom-nav {
   background: var(--accent);
   border-radius: 0 0 4px 4px;
 }
+.nav-center-logo {
+  flex: 0 0 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.nav-app-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
 .nav-badge {
   position: absolute;
   top: 6px; right: calc(50% - 18px);
@@ -237,6 +250,42 @@ textarea { resize: vertical; min-height: 80px; }
   margin-bottom: 10px;
 }
 
+/* Food section tabs (Recetas / Compra / Menús) */
+.food-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 16px 16px 12px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.food-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text2);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all .2s;
+}
+.food-tab svg { flex-shrink: 0; }
+.food-tab.active {
+  background: var(--accent);
+  color: #000;
+  border-color: var(--accent);
+}
+.food-content { position: relative; }
+
 /* Page header */
 .page-title { font-family: 'DM Sans', sans-serif; font-size: 26px; font-weight: 700; letter-spacing: -0.3px; }
 .page-sub { color: var(--text2); font-size: 13px; margin-top: 2px; }
@@ -245,13 +294,15 @@ textarea { resize: vertical; min-height: 80px; }
 .empty-state { text-align: center; padding: 48px 24px; color: var(--text2); }
 .empty-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.5; }
 
-/* Modal */
+/* Modal: arriba para no taparse con el teclado en móvil */
 .modal-overlay {
   position: fixed; inset: 0;
   background: rgba(0,0,0,0.7);
   backdrop-filter: blur(4px);
   z-index: 200;
-  display: flex; align-items: flex-end; justify-content: center;
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: max(12px, env(safe-area-inset-top)) 12px 24px;
+  overflow-y: auto;
   animation: fadeIn .2s ease;
 }
 
@@ -262,13 +313,14 @@ textarea { resize: vertical; min-height: 80px; }
 .modal {
   background: var(--bg2);
   border: 1px solid var(--border);
-  border-radius: 24px 24px 0 0;
+  border-radius: 24px;
   padding: 24px 20px 40px;
   width: 100%; max-width: 540px;
-  max-height: 90vh; overflow-y: auto;
+  max-height: min(85vh, 85dvh); overflow-y: auto;
+  flex-shrink: 0;
   animation: slideUp .3s ease;
 }
-@keyframes slideUp { from { transform: translateY(40px); } to { transform: none; } }
+@keyframes slideUp { from { opacity:0; transform: translateY(-20px); } to { opacity:1; transform: none; } }
 .modal-handle {
   width: 40px; height: 4px;
   background: var(--border2); border-radius: 2px;
