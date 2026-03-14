@@ -59,6 +59,28 @@ export function Config({ state, setState, onReset }: Props) {
     if (confirm('¿Borrar todos los datos? Esta acción no se puede deshacer.')) onReset()
   }
 
+  const clearCache = async () => {
+    try {
+      // Limpiar cachés del navegador
+      if ('caches' in window) {
+        const cacheNames = await caches.keys()
+        await Promise.all(cacheNames.map(name => caches.delete(name)))
+      }
+
+      // Desregistrar Service Worker
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations()
+        await Promise.all(registrations.map(reg => reg.unregister()))
+      }
+
+      toast('✅ Caché limpiada. Recargando...')
+      setTimeout(() => window.location.reload(), 1000)
+    } catch (error) {
+      toast('❌ Error al limpiar caché')
+      console.error(error)
+    }
+  }
+
   const providers: { id: Provider; label: string; desc: string }[] = [
     { id: 'claude', label: 'Claude (Anthropic)', desc: 'claude-haiku — Recomendado, sin restricciones CORS' },
     { id: 'openai', label: 'OpenAI', desc: 'gpt-4o-mini — Usa proxy CORS automático' },
@@ -151,6 +173,9 @@ export function Config({ state, setState, onReset }: Props) {
           <button className="btn btn-ghost" onClick={exportData}>📤 Exportar</button>
           <button className="btn btn-ghost" onClick={importData}>📥 Importar</button>
         </div>
+        <button className="btn btn-ghost btn-full" onClick={clearCache} style={{ marginBottom: 8 }}>
+          🗑️ Limpiar caché de aplicación
+        </button>
         <button className="btn btn-danger btn-full" onClick={handleReset}>⚠️ Borrar todos los datos</button>
       </Section>
 

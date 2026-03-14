@@ -15,7 +15,10 @@ export default defineConfig({
         theme_color: '#08080f',
         background_color: '#08080f',
         display: 'standalone',
+        display_override: ['standalone', 'fullscreen'],
+        orientation: 'portrait-primary',
         start_url: '/',
+        scope: '/',
         icons: [
           { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
@@ -28,6 +31,11 @@ export default defineConfig({
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
             handler: 'CacheFirst',
             options: { cacheName: 'google-fonts-cache', expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 } }
+          },
+          {
+            urlPattern: /\.(?:css)$/i,
+            handler: 'NetworkFirst',
+            options: { cacheName: 'css-cache', expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 * 24 } }
           }
         ]
       }
