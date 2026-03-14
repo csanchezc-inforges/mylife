@@ -44,6 +44,22 @@ export function Shopping({ state, setState }: Props) {
     toast(`"${itemName}" añadido a la lista`)
   }
 
+  const copyList = async () => {
+    if (!state.shoppingList.length) { toast('La lista está vacía'); return }
+    const pendingFirst = [...state.shoppingList].sort((a, b) => (a.done ? 1 : 0) - (b.done ? 1 : 0))
+    const lines = pendingFirst.map(i => {
+      const qty = i.qty?.trim() ? ` (${i.qty})` : ''
+      return `${i.done ? '✓' : '•'} ${i.name}${qty}`
+    })
+    const text = `🛒 Lista de la compra\n\n${lines.join('\n')}`
+    try {
+      await navigator.clipboard.writeText(text)
+      toast('✅ Lista copiada al portapapeles')
+    } catch {
+      toast('No se pudo copiar')
+    }
+  }
+
   const sorted = [...state.shoppingList].sort((a, b) => (a.done ? 1 : 0) - (b.done ? 1 : 0))
 
   return (
@@ -61,9 +77,10 @@ export function Shopping({ state, setState }: Props) {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-        <button className="btn btn-ghost btn-sm" onClick={clearDone}>Limpiar tachados</button>
-        <button className="btn btn-ghost btn-sm" onClick={clearAll}>Vaciar todo</button>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+        <button type="button" className="btn btn-ghost btn-sm" onClick={copyList}>📋 Copiar lista</button>
+        <button type="button" className="btn btn-ghost btn-sm" onClick={clearDone}>Limpiar tachados</button>
+        <button type="button" className="btn btn-ghost btn-sm" onClick={clearAll}>Vaciar todo</button>
       </div>
 
       {!state.shoppingList.length

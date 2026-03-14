@@ -49,12 +49,21 @@ export interface DayMenu {
 
 export type MenuPlan = Record<string, DayMenu>
 
+export type TaskEnvironment = 'personal' | 'home' | 'work'
+
+export const TASK_ENVIRONMENTS: { id: TaskEnvironment; label: string; emoji: string }[] = [
+  { id: 'personal', label: 'Personal', emoji: '👤' },
+  { id: 'home', label: 'Hogar', emoji: '🏠' },
+  { id: 'work', label: 'Trabajo', emoji: '💼' },
+]
+
 export interface Task {
   id: string
   name: string
   priority: Priority
   due: string
   category: string
+  environment?: TaskEnvironment
   done: boolean
   createdAt: string
 }
