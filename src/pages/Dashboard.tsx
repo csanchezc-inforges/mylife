@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { AppState } from '../types'
 import { todayStr, daysInMonth, formatDate } from '../hooks/useStore'
 
@@ -7,7 +8,65 @@ interface Props {
   onNavigate: (p: string) => void
 }
 
+function weatherLabel(code: number): string {
+  if (code === 0) return 'Despejado'
+  if (code <= 3) return 'Nubes'
+  if (code <= 49) return 'Niebla'
+  if (code <= 67) return 'Lluvia'
+  if (code <= 77) return 'Nieve'
+  if (code <= 82) return 'Chubascos'
+  if (code <= 86) return 'Nieve'
+  if (code <= 99) return 'Tormenta'
+  return 'Variable'
+}
+
+function weatherEmoji(code: number): string {
+  if (code === 0) return '☀️'
+  if (code <= 3) return code === 1 ? '🌤' : code === 2 ? '⛅' : '☁️'
+  if (code <= 49) return '🌫'
+  if (code <= 67) return '🌧'
+  if (code <= 77) return '❄️'
+  if (code <= 82) return '🌦'
+  if (code <= 86) return '❄️'
+  if (code <= 99) return '⛈'
+  return '🌡'
+}
+
 export function Dashboard({ state, onToggleHabit, onNavigate }: Props) {
+  const [weather, setWeather] = useState<{ temp: number; code: number; city?: string } | null>(null)
+  const [weatherError, setWeatherError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!navigator.geolocation) return
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude, longitude } = pos.coords
+        try {
+          const res = await fetch(
+            `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code`
+          )
+          const data = await res.json()
+          if (data.current) {
+            let city: string | undefined
+            try {
+              const geo = await fetch(`https://geocoding-api.open-meteo.com/v1/reverse?latitude=${latitude}&longitude=${longitude}&count=1`)
+              const geoData = await geo.json()
+              city = geoData.results?.[0]?.name
+            } catch {}
+            setWeather({
+              temp: Math.round(data.current.temperature_2m),
+              code: data.current.weather_code,
+              city,
+            })
+          }
+        } catch {
+          setWeatherError('Sin datos')
+        }
+      },
+      () => setWeatherError('Sin ubicación')
+    )
+  }, [])
+
   const now = new Date()
   const hrs = now.getHours()
   const greet = hrs < 13 ? 'Buenos días' : hrs < 20 ? 'Buenas tardes' : 'Buenas noches'
@@ -46,10 +105,27 @@ export function Dashboard({ state, onToggleHabit, onNavigate }: Props) {
 
   return (
     <div className="page-wrap">
-      {/* Greeting */}
-      <div style={{ marginBottom: 24 }}>
-        <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'DM Sans, sans-serif' }}>{greet} 👋</div>
-        <div style={{ color: 'var(--text2)', fontSize: 13, marginTop: 2 }}>{dateStr}</div>
+      {/* Greeting + Clima */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
+        <div>
+          <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'DM Sans, sans-serif' }}>{greet} 👋</div>
+          <div style={{ color: 'var(--text2)', fontSize: 13, marginTop: 2 }}>{dateStr}</div>
+        </div>
+        {(weather || weatherError) && (
+          <div className="weather-widget">
+            {weather ? (
+              <>
+                <span style={{ fontSize: 28, lineHeight: 1 }}>{weatherEmoji(weather.code)}</span>
+                <div>
+                  <div style={{ fontSize: 20, fontWeight: 700, fontFamily: 'DM Sans, sans-serif' }}>{weather.temp}°</div>
+                  <div style={{ fontSize: 11, color: 'var(--text2)' }}>{weatherLabel(weather.code)}{weather.city ? ` · ${weather.city}` : ''}</div>
+                </div>
+              </>
+            ) : (
+              <div style={{ fontSize: 12, color: 'var(--text2)' }}>{weatherError}</div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Budget hero */}
