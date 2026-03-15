@@ -177,13 +177,13 @@ export function Config({ state, setState, onReset }: Props) {
         <button className="btn btn-primary btn-full" onClick={saveKeys}>Guardar configuración</button>
       </Section>
 
-      {/* Seguridad: huella */}
+      {/* Seguridad: huella y PIN */}
       <Section title="Seguridad">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', marginBottom: 8 }}>
           <div>
             <div style={{ fontWeight: 500, fontSize: 15 }}>Desbloquear con huella</div>
             <div style={{ fontSize: 12, color: 'var(--text2)' }}>
-              {isBiometricSupported() ? 'Al abrir la app deberás identificarte con el sensor de huella' : 'No disponible en este dispositivo o navegador'}
+              {isBiometricSupported() ? 'Al abrir la app deberás identificarte con el sensor de huella o con PIN' : 'No disponible en este dispositivo o navegador'}
             </div>
           </div>
           <div
@@ -194,6 +194,24 @@ export function Config({ state, setState, onReset }: Props) {
         </div>
         {biometricLoading && (
           <p style={{ fontSize: 13, color: 'var(--text2)', marginTop: 4 }}>Registrando huella… Sigue las indicaciones del dispositivo.</p>
+        )}
+        {biometricOn && (
+          <div className="input-group" style={{ marginTop: 12 }}>
+            <label className="input-label">PIN de desbloqueo (4 dígitos)</label>
+            <input
+              type="password"
+              inputMode="numeric"
+              maxLength={4}
+              pattern="[0-9]*"
+              value={state.config.unlockPin ?? ''}
+              onChange={e => {
+                const v = e.target.value.replace(/\D/g, '').slice(0, 4)
+                setState(s => ({ ...s, config: { ...s.config, unlockPin: v } }))
+              }}
+              placeholder="ej: 9974"
+            />
+            <p style={{ fontSize: 12, color: 'var(--text2)', marginTop: 6 }}>Alternativa a la huella al desbloquear la app.</p>
+          </div>
         )}
       </Section>
 

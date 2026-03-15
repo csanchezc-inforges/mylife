@@ -10,7 +10,7 @@ import { Budget } from './pages/Budget'
 import { Tasks } from './pages/Tasks'
 import { Habits } from './pages/Habits'
 import { Config } from './pages/Config'
-import { isUnlocked, setUnlocked, clearBiometricCredential } from './lib/biometric'
+import { isUnlocked, setUnlocked } from './lib/biometric'
 
 const INSTALL_BANNER_DISMISS_KEY = 'mylife-install-banner-dismissed'
 const DISMISS_DAYS = 7
@@ -127,17 +127,10 @@ export default function App() {
     setBiometricUnlocked(true)
   }, [])
 
-  const handleDisableBiometric = useCallback(() => {
-    clearBiometricCredential()
-    setState(s => ({ ...s, config: { ...s.config, biometricEnabled: false } }))
-    setUnlocked(true)
-    setBiometricUnlocked(true)
-  }, [setState])
-
   if (showLockScreen) {
     return (
       <>
-        <LockScreen onUnlock={handleBiometricUnlock} onDisableBiometric={handleDisableBiometric} />
+        <LockScreen onUnlock={handleBiometricUnlock} unlockPin={state.config.unlockPin ?? ''} />
         <Toast />
       </>
     )

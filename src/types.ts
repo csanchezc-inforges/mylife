@@ -85,6 +85,8 @@ export interface Config {
   openaiKey: string
   /** Desbloquear app con huella dactilar (opcional) */
   biometricEnabled?: boolean
+  /** PIN de desbloqueo (4 dígitos), alternativo a la huella */
+  unlockPin?: string
 }
 
 export interface NotifConfig {

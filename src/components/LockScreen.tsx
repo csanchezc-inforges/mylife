@@ -2,14 +2,16 @@ import { useState } from 'react'
 import { authenticateBiometric, setUnlocked } from '../lib/biometric'
 import appLogo from '../assets/icon-192.png'
 
-const UNLOCK_PIN = '9974'
-
 interface Props {
   onUnlock: () => void
-  onDisableBiometric?: () => void
+  /** PIN configurado (4 dígitos). Si no hay, se usa 9974 por defecto. */
+  unlockPin: string
 }
 
-export function LockScreen({ onUnlock, onDisableBiometric }: Props) {
+const DEFAULT_PIN = '9974'
+
+export function LockScreen({ onUnlock, unlockPin }: Props) {
+  const expectedPin = (unlockPin && unlockPin.length === 4) ? unlockPin : DEFAULT_PIN
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showPin, setShowPin] = useState(false)
@@ -37,7 +39,7 @@ export function LockScreen({ onUnlock, onDisableBiometric }: Props) {
     const next = pin + digit
     setPin(next)
     setPinError(null)
-    if (next.length === 4 && next === UNLOCK_PIN) {
+    if (next.length === 4 && next === expectedPin) {
       setUnlocked(true)
       onUnlock()
     } else if (next.length === 4) {
@@ -86,11 +88,6 @@ export function LockScreen({ onUnlock, onDisableBiometric }: Props) {
               Usar PIN
             </button>
             {error && <p className="lock-screen-error" role="alert">{error}</p>}
-            {onDisableBiometric && (
-              <button type="button" className="lock-screen-disable" onClick={onDisableBiometric}>
-                Desactivar desbloqueo con huella
-              </button>
-            )}
           </>
         ) : (
           <div className="lock-screen-pin">
