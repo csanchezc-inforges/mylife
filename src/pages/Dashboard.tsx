@@ -45,10 +45,68 @@ type WeatherData = {
   daily: DailyItem[]
 }
 
+const WEATHER_COORDS_KEY = 'mylife_weather_coords'
+
+function loadStoredCoords(): { lat: number; lng: number } | null {
+  try {
+    const raw = localStorage.getItem(WEATHER_COORDS_KEY)
+    if (!raw) return null
+    const o = JSON.parse(raw)
+    if (typeof o?.lat === 'number' && typeof o?.lng === 'number') return { lat: o.lat, lng: o.lng }
+  } catch {}
+  return null
+}
+
+function saveCoords(lat: number, lng: number) {
+  try {
+    localStorage.setItem(WEATHER_COORDS_KEY, JSON.stringify({ lat, lng }))
+  } catch {}
+}
+
+async function fetchWeatherFromCoords(latitude: number, longitude: number): Promise<WeatherData | null> {
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code&hourly=temperature_2m,weather_code&daily=temperature_2m_min,temperature_2m_max,weather_code&timezone=auto`
+    const res = await fetch(url)
+    const data = await res.json()
+    if (!data.current || !data.hourly?.time || !data.daily?.time) return null
+    let city: string | undefined
+    try {
+      const geo = await fetch(`https://geocoding-api.open-meteo.com/v1/reverse?latitude=${latitude}&longitude=${longitude}&count=1`)
+      const geoData = await geo.json()
+      city = geoData.results?.[0]?.name
+    } catch {}
+    const today = new Date().toISOString().slice(0, 10)
+    const daily = (data.daily.time as string[]).map((date: string, i: number) => ({
+      date,
+      min: Math.round((data.daily.temperature_2m_min as number[])[i]),
+      max: Math.round((data.daily.temperature_2m_max as number[])[i]),
+      code: (data.daily.weather_code as number[])[i] ?? 0,
+    }))
+    const hourly: HourlyItem[] = (data.hourly.time as string[]).map((time: string, i: number) => ({
+      time,
+      temp: Math.round((data.hourly.temperature_2m as number[])[i]),
+      code: (data.hourly.weather_code as number[])[i] ?? 0,
+    }))
+    const todayIndex = daily.findIndex((d: DailyItem) => d.date === today)
+    const tempMin = todayIndex >= 0 ? daily[todayIndex].min : data.current.temperature_2m
+    const tempMax = todayIndex >= 0 ? daily[todayIndex].max : data.current.temperature_2m
+    return {
+      temp: Math.round(data.current.temperature_2m),
+      tempMin,
+      tempMax,
+      code: data.current.weather_code,
+      city,
+      hourly,
+      daily,
+    }
+  } catch {
+    return null
+  }
+}
+
 export function Dashboard({ state, onToggleHabit, onNavigate }: Props) {
   const [weather, setWeather] = useState<WeatherData | null>(null)
   const [weatherError, setWeatherError] = useState<string | null>(null)
-  const [weatherLoading, setWeatherLoading] = useState(true)
   const [weatherDetailOpen, setWeatherDetailOpen] = useState(false)
 
   useEffect(() => {
@@ -59,66 +117,46 @@ export function Dashboard({ state, onToggleHabit, onNavigate }: Props) {
   }, [weatherDetailOpen])
 
   useEffect(() => {
+    let cancelled = false
+    const apply = (w: WeatherData | null, err: string | null) => {
+      if (cancelled) return
+      if (w) {
+        setWeather(w)
+        setWeatherError(null)
+      }
+      if (err != null) setWeatherError(err)
+    }
+    const stored = loadStoredCoords()
+    if (stored) {
+      fetchWeatherFromCoords(stored.lat, stored.lng).then(w => {
+        if (w) apply(w, null)
+        else apply(null, 'Sin datos')
+      })
+    } else {
+      setWeatherError(null)
+    }
     if (typeof navigator === 'undefined' || !navigator.geolocation) {
-      setWeatherError('Ubicación no disponible')
-      setWeatherLoading(false)
+      if (!stored) apply(null, 'Ubicación no disponible')
       return
     }
-    setWeatherLoading(true)
-    setWeatherError(null)
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const { latitude, longitude } = pos.coords
-        try {
-          const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code&hourly=temperature_2m,weather_code&daily=temperature_2m_min,temperature_2m_max,weather_code&timezone=auto`
-          const res = await fetch(url)
-          const data = await res.json()
-          if (data.current && data.hourly?.time && data.daily?.time) {
-            let city: string | undefined
-            try {
-              const geo = await fetch(`https://geocoding-api.open-meteo.com/v1/reverse?latitude=${latitude}&longitude=${longitude}&count=1`)
-              const geoData = await geo.json()
-              city = geoData.results?.[0]?.name
-            } catch {}
-            const today = new Date().toISOString().slice(0, 10)
-            const daily = (data.daily.time as string[]).map((date: string, i: number) => ({
-              date,
-              min: Math.round((data.daily.temperature_2m_min as number[])[i]),
-              max: Math.round((data.daily.temperature_2m_max as number[])[i]),
-              code: (data.daily.weather_code as number[])[i] ?? 0,
-            }))
-            const hourly: HourlyItem[] = (data.hourly.time as string[]).map((time: string, i: number) => ({
-              time,
-              temp: Math.round((data.hourly.temperature_2m as number[])[i]),
-              code: (data.hourly.weather_code as number[])[i] ?? 0,
-            }))
-            const todayIndex = daily.findIndex((d: DailyItem) => d.date === today)
-            const tempMin = todayIndex >= 0 ? daily[todayIndex].min : data.current.temperature_2m
-            const tempMax = todayIndex >= 0 ? daily[todayIndex].max : data.current.temperature_2m
-            setWeather({
-              temp: Math.round(data.current.temperature_2m),
-              tempMin,
-              tempMax,
-              code: data.current.weather_code,
-              city,
-              hourly,
-              daily,
-            })
-          } else {
-            setWeatherError('Sin datos')
-          }
-        } catch {
-          setWeatherError('Sin datos')
-        } finally {
-          setWeatherLoading(false)
+        saveCoords(latitude, longitude)
+        const w = await fetchWeatherFromCoords(latitude, longitude)
+        if (cancelled) return
+        if (w) {
+          setWeather(w)
+          setWeatherError(null)
         }
       },
       () => {
-        setWeatherError('Sin ubicación')
-        setWeatherLoading(false)
+        if (cancelled) return
+        if (!stored) setWeatherError('Sin ubicación')
       },
-      { enableHighAccuracy: false, timeout: 15000, maximumAge: 0 }
+      { enableHighAccuracy: false, timeout: 12000, maximumAge: 10 * 60 * 1000 }
     )
+    return () => { cancelled = true }
   }, [])
 
   const now = new Date()
@@ -165,22 +203,14 @@ export function Dashboard({ state, onToggleHabit, onNavigate }: Props) {
           <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'DM Sans, sans-serif' }}>{greet} 👋</div>
           <div style={{ color: 'var(--text2)', fontSize: 13, marginTop: 2 }}>{dateStr}</div>
         </div>
-        {(weatherLoading || weather || weatherError) && (
+        {(weather || weatherError) && (
           <div
             className={`weather-widget${weather ? ' weather-widget-clickable' : ''}`}
             onClick={() => weather && setWeatherDetailOpen(true)}
             role={weather ? 'button' : undefined}
             aria-label={weather ? 'Ver previsión detallada' : undefined}
           >
-            {weatherLoading && !weather ? (
-              <>
-                <span style={{ fontSize: 28, lineHeight: 1 }}>🌡</span>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 600, fontFamily: 'DM Sans, sans-serif' }}>Obteniendo ubicación…</div>
-                  <div style={{ fontSize: 11, color: 'var(--text2)' }}>Permite el acceso a la ubicación para ver el tiempo</div>
-                </div>
-              </>
-            ) : weather ? (
+            {weather ? (
               <>
                 <span style={{ fontSize: 28, lineHeight: 1 }}>{weatherEmoji(weather.code)}</span>
                 <div>
