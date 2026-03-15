@@ -48,6 +48,7 @@ type WeatherData = {
 export function Dashboard({ state, onToggleHabit, onNavigate }: Props) {
   const [weather, setWeather] = useState<WeatherData | null>(null)
   const [weatherError, setWeatherError] = useState<string | null>(null)
+  const [weatherLoading, setWeatherLoading] = useState(true)
   const [weatherDetailOpen, setWeatherDetailOpen] = useState(false)
 
   useEffect(() => {
@@ -58,7 +59,13 @@ export function Dashboard({ state, onToggleHabit, onNavigate }: Props) {
   }, [weatherDetailOpen])
 
   useEffect(() => {
-    if (!navigator.geolocation) return
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      setWeatherError('Ubicación no disponible')
+      setWeatherLoading(false)
+      return
+    }
+    setWeatherLoading(true)
+    setWeatherError(null)
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const { latitude, longitude } = pos.coords
@@ -97,12 +104,20 @@ export function Dashboard({ state, onToggleHabit, onNavigate }: Props) {
               hourly,
               daily,
             })
+          } else {
+            setWeatherError('Sin datos')
           }
         } catch {
           setWeatherError('Sin datos')
+        } finally {
+          setWeatherLoading(false)
         }
       },
-      () => setWeatherError('Sin ubicación')
+      () => {
+        setWeatherError('Sin ubicación')
+        setWeatherLoading(false)
+      },
+      { enableHighAccuracy: false, timeout: 15000, maximumAge: 0 }
     )
   }, [])
 
@@ -150,14 +165,22 @@ export function Dashboard({ state, onToggleHabit, onNavigate }: Props) {
           <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'DM Sans, sans-serif' }}>{greet} 👋</div>
           <div style={{ color: 'var(--text2)', fontSize: 13, marginTop: 2 }}>{dateStr}</div>
         </div>
-        {(weather || weatherError) && (
+        {(weatherLoading || weather || weatherError) && (
           <div
             className={`weather-widget${weather ? ' weather-widget-clickable' : ''}`}
             onClick={() => weather && setWeatherDetailOpen(true)}
             role={weather ? 'button' : undefined}
             aria-label={weather ? 'Ver previsión detallada' : undefined}
           >
-            {weather ? (
+            {weatherLoading && !weather ? (
+              <>
+                <span style={{ fontSize: 28, lineHeight: 1 }}>🌡</span>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 600, fontFamily: 'DM Sans, sans-serif' }}>Obteniendo ubicación…</div>
+                  <div style={{ fontSize: 11, color: 'var(--text2)' }}>Permite el acceso a la ubicación para ver el tiempo</div>
+                </div>
+              </>
+            ) : weather ? (
               <>
                 <span style={{ fontSize: 28, lineHeight: 1 }}>{weatherEmoji(weather.code)}</span>
                 <div>

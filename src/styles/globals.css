@@ -498,145 +498,137 @@ textarea { resize: vertical; min-height: 80px; }
 .fab:active { transform: scale(0.92); }
 
 /* Offline banner */
-/* Pantalla de bloqueo: diseño visual con logo y PIN */
+/* Pantalla de bloqueo: minimalista, siempre fondo oscuro */
 .lock-screen {
   position: fixed;
   inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  padding: 20px;
   z-index: 300;
   overflow-y: auto;
+  background: #08080f;
 }
 .lock-screen-bg {
-  position: fixed;
-  inset: 0;
-  background:
-    radial-gradient(ellipse 100% 80% at 50% -20%, rgba(0,229,192,0.15) 0%, transparent 50%),
-    radial-gradient(ellipse 80% 60% at 80% 100%, rgba(167,139,250,0.12) 0%, transparent 50%),
-    var(--bg);
-  pointer-events: none;
+  display: none;
 }
 .lock-screen-card {
   position: relative;
   width: 100%;
-  max-width: 360px;
+  max-width: 280px;
   text-align: center;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 24px;
-  padding: 36px 28px 32px;
-  box-shadow: 0 24px 48px rgba(0,0,0,0.25);
 }
 .lock-screen-logo-wrap {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 .lock-screen-logo {
-  width: 96px;
-  height: 96px;
-  border-radius: 22px;
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
   object-fit: contain;
   display: block;
   margin: 0 auto;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
 }
 .lock-screen-title {
   font-family: 'DM Sans', sans-serif;
-  font-size: 26px;
+  font-size: 20px;
   font-weight: 700;
-  margin-bottom: 6px;
-  color: var(--text);
+  margin-bottom: 4px;
+  color: #e8e8f0;
   letter-spacing: -0.02em;
 }
 .lock-screen-sub {
-  font-size: 14px;
-  color: var(--text2);
-  margin-bottom: 28px;
+  font-size: 13px;
+  color: #8888aa;
+  margin-bottom: 24px;
 }
-.lock-screen-btn {
+.lock-screen .lock-screen-btn {
   width: 100%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  margin-bottom: 10px;
+  gap: 8px;
+  margin-bottom: 8px;
+  border-color: rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.06);
+  color: #e8e8f0;
+}
+.lock-screen .lock-screen-btn:hover {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
 }
 .lock-screen-btn-main {
-  padding: 14px 20px;
-  font-size: 16px;
+  padding: 12px 16px;
+  font-size: 15px;
   font-weight: 600;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
+  background: #00e5c0;
+  color: #08080f;
+  border-color: #00e5c0;
+}
+.lock-screen-btn-main:hover {
+  background: #00cfad;
+  color: #08080f;
+  border-color: #00cfad;
 }
 .lock-screen-btn-icon {
-  font-size: 22px;
+  font-size: 18px;
   line-height: 1;
 }
 .lock-screen-error {
-  margin-top: 12px;
-  font-size: 13px;
-  color: var(--danger);
-}
-.lock-screen-disable {
-  margin-top: 20px;
+  margin-top: 10px;
   font-size: 12px;
-  color: var(--text2);
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-family: inherit;
-  text-decoration: underline;
-}
-.lock-screen-disable:hover {
-  color: var(--text);
+  color: #ff4d6d;
 }
 
 /* PIN */
 .lock-screen-pin {
-  margin-top: 8px;
+  margin-top: 4px;
 }
 .lock-screen-pin-dots {
   display: flex;
   justify-content: center;
-  gap: 16px;
-  margin-bottom: 24px;
+  gap: 12px;
+  margin-bottom: 20px;
 }
 .lock-screen-dot {
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
-  border: 2px solid var(--border2);
+  border: 2px solid rgba(255,255,255,0.2);
   background: transparent;
   transition: background .2s, border-color .2s;
 }
 .lock-screen-dot.filled {
-  background: var(--accent);
-  border-color: var(--accent);
+  background: #00e5c0;
+  border-color: #00e5c0;
 }
 .lock-screen-numpad {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  max-width: 240px;
-  margin: 0 auto 20px;
+  gap: 10px;
+  max-width: 200px;
+  margin: 0 auto 16px;
 }
 .lock-screen-numpad-key {
   aspect-ratio: 1;
   border-radius: 50%;
-  border: 1px solid var(--border);
-  background: var(--surface2);
-  color: var(--text);
-  font-size: 22px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.06);
+  color: #e8e8f0;
+  font-size: 20px;
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background .2s, transform .1s;
+  transition: background .15s, transform .1s;
 }
 .lock-screen-numpad-key:hover {
-  background: var(--border2);
+  background: rgba(255,255,255,0.12);
+  color: #fff;
 }
 .lock-screen-numpad-key:active {
   transform: scale(0.95);
@@ -647,7 +639,13 @@ textarea { resize: vertical; min-height: 80px; }
   border-color: transparent;
 }
 .lock-screen-back {
-  font-size: 13px;
+  font-size: 12px;
+  color: #8888aa;
+  border: none;
+  background: none;
+}
+.lock-screen-back:hover {
+  color: #e8e8f0;
 }
 
 .offline-banner {

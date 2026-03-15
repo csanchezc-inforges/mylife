@@ -208,7 +208,7 @@ export function Config({ state, setState, onReset }: Props) {
                 const v = e.target.value.replace(/\D/g, '').slice(0, 4)
                 setState(s => ({ ...s, config: { ...s.config, unlockPin: v } }))
               }}
-              placeholder="ej: 9974"
+              placeholder="ej: 1234"
             />
             <p style={{ fontSize: 12, color: 'var(--text2)', marginTop: 6 }}>Alternativa a la huella al desbloquear la app.</p>
           </div>
