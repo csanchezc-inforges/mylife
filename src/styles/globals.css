@@ -599,3 +599,70 @@ textarea { resize: vertical; min-height: 80px; }
 button.habit-dot { padding: 0; }
 .habit-dot.done { background: rgba(0,229,192,0.2); border-color: rgba(0,229,192,0.4); color: var(--accent); }
 .habit-dot.today-dot { border-color: var(--accent2); color: var(--accent2); background: rgba(167,139,250,0.1); }
+
+/* Habit card: título y meta en líneas separadas para no amontonar */
+.habit-card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.habit-card-title {
+  font-weight: 700;
+  font-size: 16px;
+  font-family: 'DM Sans', sans-serif;
+  line-height: 1.3;
+}
+.habit-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.habit-card-goal {
+  font-size: 12px;
+  color: var(--text2);
+}
+.habit-card-streak {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(251,191,36,0.12);
+  color: var(--warning);
+  padding: 4px 10px;
+  border-radius: 99px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.habit-card-btn {
+  background: none;
+  border: none;
+  color: var(--text2);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+}
+.habit-card-btn-x { font-size: 18px; padding: 0 4px; }
+.habit-card-meta .habit-card-btn:last-of-type { margin-left: 0; }
+
+/* Recetas: checkbox de ingredientes pequeño y alineado */
+.recipe-ingredient-check {
+  width: 14px;
+  height: 14px;
+  min-width: 14px;
+  min-height: 14px;
+  flex-shrink: 0;
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+.recipe-ingredient-label {
+  display: inline-flex;
+  align-items: center;
+}
+.recipe-ingredient-label .recipe-ingredient-check {
+  flex-shrink: 0;
+}

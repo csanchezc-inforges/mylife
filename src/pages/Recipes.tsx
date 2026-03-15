@@ -233,9 +233,9 @@ function RecipeCard({
             {recipe.ingredients.map((i, idx) => {
               const isEx = excluded.has(idx)
               return (
-                <label key={idx} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: isEx ? 'var(--surface)' : 'var(--surface2)', border: '1px solid ' + (isEx ? 'var(--danger)' : 'var(--border)'), borderRadius: 6, padding: '4px 10px', fontSize: 13, cursor: isNew && onRegenerate ? 'pointer' : 'default' }}>
+                <label key={idx} className={isNew && onRegenerate ? 'recipe-ingredient-label' : ''} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: isEx ? 'var(--surface)' : 'var(--surface2)', border: '1px solid ' + (isEx ? 'var(--danger)' : 'var(--border)'), borderRadius: 6, padding: '4px 10px', fontSize: 13, cursor: isNew && onRegenerate ? 'pointer' : 'default' }}>
                   {isNew && onRegenerate && (
-                    <input type="checkbox" checked={isEx} onChange={() => toggleExclude(idx)} />
+                    <input type="checkbox" checked={isEx} onChange={() => toggleExclude(idx)} className="recipe-ingredient-check" />
                   )}
                   <span style={{ textDecoration: isEx ? 'line-through' : 'none', color: isEx ? 'var(--text2)' : 'inherit' }}>
                     {i.amount} {i.name}

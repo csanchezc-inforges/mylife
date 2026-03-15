@@ -139,21 +139,19 @@ export function Habits({ state, setState }: Props) {
           const streak = getStreak(logs, selectedDate)
           return (
             <div key={h.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 16, marginBottom: 10 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                <div style={{ fontWeight: 700, fontSize: 16, fontFamily: 'DM Sans, sans-serif' }}>{h.emoji} {h.name}</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div className="habit-card-header">
+                <div className="habit-card-title">{h.emoji} {h.name}</div>
+                <div className="habit-card-meta">
                   {h.daysPerWeek != null && (
-                    <span style={{ fontSize: 12, color: 'var(--text2)' }}>Objetivo: {h.daysPerWeek}/sem</span>
+                    <span className="habit-card-goal">Objetivo: {h.daysPerWeek}/sem</span>
                   )}
                   {streak > 0 && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(251,191,36,0.12)', color: 'var(--warning)', padding: '4px 10px', borderRadius: 99, fontSize: 13, fontWeight: 700 }}>
-                      🔥 {streak}
-                    </div>
+                    <span className="habit-card-streak">🔥 {streak}</span>
                   )}
-                  <button type="button" onClick={() => openEdit(h)} style={{ background: 'none', border: 'none', color: 'var(--text2)', cursor: 'pointer', padding: 4 }} aria-label="Editar">
+                  <button type="button" onClick={() => openEdit(h)} className="habit-card-btn" aria-label="Editar">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} width={18} height={18}><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                   </button>
-                  <button type="button" onClick={() => deleteHabit(h.id)} style={{ background: 'none', border: 'none', color: 'var(--text2)', cursor: 'pointer', fontSize: 18 }}>×</button>
+                  <button type="button" onClick={() => deleteHabit(h.id)} className="habit-card-btn habit-card-btn-x">×</button>
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 12 }}>
