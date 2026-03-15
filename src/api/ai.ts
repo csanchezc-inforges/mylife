@@ -1,5 +1,11 @@
 import { Config, Recipe } from '../types'
 
+export interface RecipeOptions {
+  dietType?: string   // keto, low carb, baja en grasas, baja en calorías, etc.
+  cuisineType?: string // española, italiana, asiática, etc.
+  other?: string      // sin gluten, vegano, sin lactosa, etc.
+}
+
 const SYS_PROMPT = `Eres un chef experto. Genera recetas detalladas en español.
 Responde SOLO con JSON válido, sin markdown, sin backticks ni texto extra. Formato exacto:
 {"name":"nombre","time":"X min","servings":N,"difficulty":"Fácil|Media|Difícil","ingredients":[{"name":"ingrediente","amount":"cantidad"}],"steps":["paso 1","paso 2"],"tips":"consejo opcional"}`
@@ -15,11 +21,29 @@ function parseRecipeJSON(text: string): Recipe {
   return parsed as Recipe
 }
 
+function buildRecipePrompt(
+  prompt: string,
+  servings: number,
+  maxTime: number,
+  options?: RecipeOptions,
+  excludeIngredients?: string[]
+): string {
+  let text = `Receta: ${prompt}. Personas: ${servings}. Tiempo máximo: ${maxTime} minutos.`
+  if (options?.dietType) text += ` Tipo de dieta: ${options.dietType}.`
+  if (options?.cuisineType) text += ` Tipo de cocina: ${options.cuisineType}.`
+  if (options?.other) text += ` Requisitos: ${options.other}.`
+  if (excludeIngredients?.length) text += ` NO incluyas estos ingredientes: ${excludeIngredients.join(', ')}.`
+  text += ' Responde SOLO el JSON.'
+  return text
+}
+
 export async function generateRecipeAI(
   config: Config,
   prompt: string,
   servings: number,
-  maxTime: number
+  maxTime: number,
+  options?: RecipeOptions,
+  excludeIngredients?: string[]
 ): Promise<Recipe> {
   const hasClaude = config.claudeKey?.startsWith('sk-ant')
   const hasOpenAI = config.openaiKey?.startsWith('sk-')
@@ -28,7 +52,7 @@ export async function generateRecipeAI(
     throw new Error('No hay ninguna clave API configurada.')
   }
 
-  const userPrompt = `Receta: ${prompt}. Personas: ${servings}. Tiempo máximo: ${maxTime} minutos. Responde SOLO el JSON.`
+  const userPrompt = buildRecipePrompt(prompt, servings, maxTime, options, excludeIngredients)
 
   // Claude preferred (no CORS issues from browser)
   if (hasClaude && (config.provider === 'claude' || !hasOpenAI)) {
@@ -52,7 +76,7 @@ export async function generateRecipeAI(
     return parseRecipeJSON(data.content[0].text)
   }
 
-  // OpenAI vía proxy CORS (necesario en navegador/PWA; en standalone puede fallar según red)
+  // OpenAI vía proxy CORS (necesario en navegador/PWA) (necesario en navegador/PWA; en standalone puede fallar según red)
   if (hasOpenAI) {
     const openAiUrl = 'https://api.openai.com/v1/chat/completions'
     const body = JSON.stringify({

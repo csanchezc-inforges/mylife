@@ -72,6 +72,8 @@ export interface Habit {
   id: string
   name: string
   emoji: string
+  /** Objetivo: días a la semana (1-7). Opcional. */
+  daysPerWeek?: number
   createdAt: string
 }
 

@@ -593,6 +593,9 @@ textarea { resize: vertical; min-height: 80px; }
   background: var(--surface2); border: 1px solid var(--border);
   display: flex; align-items: center; justify-content: center;
   font-size: 10px; color: var(--text2);
+  cursor: pointer;
+  font-family: inherit;
 }
+button.habit-dot { padding: 0; }
 .habit-dot.done { background: rgba(0,229,192,0.2); border-color: rgba(0,229,192,0.4); color: var(--accent); }
 .habit-dot.today-dot { border-color: var(--accent2); color: var(--accent2); background: rgba(167,139,250,0.1); }
