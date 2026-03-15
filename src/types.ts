@@ -83,6 +83,8 @@ export interface Config {
   provider: Provider
   claudeKey: string
   openaiKey: string
+  /** Desbloquear app con huella dactilar (opcional) */
+  biometricEnabled?: boolean
 }
 
 export interface NotifConfig {
@@ -145,7 +147,7 @@ export const DEFAULT_STATE: AppState = {
   tasks: [],
   habits: [],
   habitLogs: {},
-  config: { provider: 'claude', claudeKey: '', openaiKey: '' },
+  config: { provider: 'claude', claudeKey: '', openaiKey: '', biometricEnabled: false },
   notif: { habits: false, daily: false },
   theme: 'dark',
   accentColor: '#00e5c0',

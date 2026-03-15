@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { AppState, Provider, ACCENT_COLORS } from '../types'
 import { toast } from '../components/Toast'
+import { isBiometricSupported, registerBiometric, clearBiometricCredential } from '../lib/biometric'
 
 interface Props {
   state: AppState
@@ -14,6 +15,34 @@ export function Config({ state, setState, onReset }: Props) {
 
   const selectProvider = (p: Provider) => setState(s => ({ ...s, config: { ...s.config, provider: p } }))
   const toggleNotif = (key: 'habits' | 'daily') => setState(s => ({ ...s, notif: { ...s.notif, [key]: !s.notif[key] } }))
+
+  const [biometricLoading, setBiometricLoading] = useState(false)
+  const biometricOn = Boolean(state.config.biometricEnabled)
+
+  const toggleBiometric = async () => {
+    if (biometricOn) {
+      clearBiometricCredential()
+      setState(s => ({ ...s, config: { ...s.config, biometricEnabled: false } }))
+      toast('Desbloqueo con huella desactivado')
+      return
+    }
+    if (!isBiometricSupported()) {
+      toast('Tu dispositivo no soporta desbloqueo con huella')
+      return
+    }
+    setBiometricLoading(true)
+    try {
+      const result = await registerBiometric()
+      if (result.ok) {
+        setState(s => ({ ...s, config: { ...s.config, biometricEnabled: true } }))
+        toast('Desbloqueo con huella activado')
+      } else {
+        toast(result.error)
+      }
+    } finally {
+      setBiometricLoading(false)
+    }
+  }
 
   const saveKeys = () => {
     setState(s => ({ ...s, config: { ...s.config, claudeKey, openaiKey } }))
@@ -146,6 +175,26 @@ export function Config({ state, setState, onReset }: Props) {
           💡 Las claves se guardan <strong style={{ color: 'var(--text)' }}>solo en tu dispositivo</strong>, nunca se envían a ningún servidor externo.
         </div>
         <button className="btn btn-primary btn-full" onClick={saveKeys}>Guardar configuración</button>
+      </Section>
+
+      {/* Seguridad: huella */}
+      <Section title="Seguridad">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', marginBottom: 8 }}>
+          <div>
+            <div style={{ fontWeight: 500, fontSize: 15 }}>Desbloquear con huella</div>
+            <div style={{ fontSize: 12, color: 'var(--text2)' }}>
+              {isBiometricSupported() ? 'Al abrir la app deberás identificarte con el sensor de huella' : 'No disponible en este dispositivo o navegador'}
+            </div>
+          </div>
+          <div
+            className={`toggle${biometricOn ? ' on' : ''}`}
+            onClick={isBiometricSupported() && !biometricLoading ? toggleBiometric : undefined}
+            style={biometricLoading ? { opacity: 0.6, pointerEvents: 'none' } : undefined}
+          />
+        </div>
+        {biometricLoading && (
+          <p style={{ fontSize: 13, color: 'var(--text2)', marginTop: 4 }}>Registrando huella… Sigue las indicaciones del dispositivo.</p>
+        )}
       </Section>
 
       {/* Theme */}
