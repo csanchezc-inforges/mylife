@@ -3,6 +3,9 @@ import { AppState, Habit } from '../types'
 import { uid, todayStr } from '../hooks/useStore'
 import { Modal } from '../components/Modal'
 import { toast } from '../components/Toast'
+import { Sports } from './Sports'
+
+type HabitsSubPage = 'habits' | 'sports'
 
 interface Props { state: AppState; setState: (fn: (s: AppState) => AppState) => void }
 
@@ -41,6 +44,7 @@ function formatDayLabel(dateStr: string): string {
 
 export function Habits({ state, setState }: Props) {
   const t = todayStr()
+  const [subPage, setSubPage] = useState<HabitsSubPage>('habits')
   const [selectedDate, setSelectedDate] = useState(t)
   const [showModal, setShowModal] = useState(false)
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null)
@@ -114,10 +118,18 @@ export function Habits({ state, setState }: Props) {
 
   return (
     <div className="page-wrap">
-      <div style={{ marginBottom: 16 }}>
-        <div className="page-title">Hábitos</div>
-        <div className="page-sub">{doneCount} de {state.habits.length} completados</div>
+      <div className="habits-sports-tabs">
+        <button type="button" className={`habits-sports-tab${subPage === 'habits' ? ' active' : ''}`} onClick={() => setSubPage('habits')}>Hábitos</button>
+        <button type="button" className={`habits-sports-tab${subPage === 'sports' ? ' active' : ''}`} onClick={() => setSubPage('sports')}>Sports</button>
       </div>
+      {subPage === 'sports' ? (
+        <Sports state={state} setState={setState} />
+      ) : (
+        <>
+          <div style={{ marginBottom: 16 }}>
+            <div className="page-title">Hábitos</div>
+            <div className="page-sub">{doneCount} de {state.habits.length} completados</div>
+          </div>
 
       {/* Navegación por día */}
       <div className="card" style={{ marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
@@ -259,6 +271,8 @@ export function Habits({ state, setState }: Props) {
             <button className="btn btn-ghost" onClick={() => deleteHabit(editingHabit.id)}>Eliminar</button>
           </div>
         </Modal>
+      )}
+        </>
       )}
     </div>
   )

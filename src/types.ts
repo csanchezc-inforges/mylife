@@ -79,6 +79,22 @@ export interface Habit {
 
 export type HabitLogs = Record<string, string[]>
 
+/** Punto GPS de una ruta de deporte */
+export interface SportRoutePoint {
+  lat: number
+  lng: number
+  timestamp: number
+}
+
+/** Ruta guardada (correr/andar) */
+export interface SportRoute {
+  id: string
+  points: SportRoutePoint[]
+  distanceKm: number
+  startedAt: string
+  finishedAt: string  // YYYY-MM-DD
+}
+
 export interface Config {
   provider: Provider
   claudeKey: string
@@ -115,6 +131,7 @@ export interface AppState {
   tasks: Task[]
   habits: Habit[]
   habitLogs: HabitLogs
+  sportRoutes: SportRoute[]
   config: Config
   notif: NotifConfig
   theme: Theme
@@ -149,6 +166,7 @@ export const DEFAULT_STATE: AppState = {
   tasks: [],
   habits: [],
   habitLogs: {},
+  sportRoutes: [],
   config: { provider: 'claude', claudeKey: '', openaiKey: '', biometricEnabled: false },
   notif: { habits: false, daily: false },
   theme: 'dark',
