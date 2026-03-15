@@ -117,13 +117,15 @@ export function Habits({ state, setState }: Props) {
   }
 
   return (
-    <div className="page-wrap">
+    <div className="page-wrap habits-page">
       <div className="habits-sports-tabs">
         <button type="button" className={`habits-sports-tab${subPage === 'habits' ? ' active' : ''}`} onClick={() => setSubPage('habits')}>Hábitos</button>
         <button type="button" className={`habits-sports-tab${subPage === 'sports' ? ' active' : ''}`} onClick={() => setSubPage('sports')}>Sports</button>
       </div>
       {subPage === 'sports' ? (
-        <Sports state={state} setState={setState} />
+        <div className="habits-sports-content">
+          <Sports state={state} setState={setState} />
+        </div>
       ) : (
         <>
           <div style={{ marginBottom: 16 }}>

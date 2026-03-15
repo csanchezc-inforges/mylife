@@ -14,12 +14,38 @@ interface Props {
 
 type TrackingStatus = 'idle' | 'recording' | 'paused'
 
+const MAP_TILES = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png'
+const MAP_ATTRIBUTION = '© OpenStreetMap, © CARTO'
+
 function formatDuration(ms: number): string {
   const s = Math.floor(ms / 1000)
   const m = Math.floor(s / 60)
   const h = Math.floor(m / 60)
   if (h > 0) return `${h}:${String(m % 60).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
   return `${m}:${String(s % 60).padStart(2, '0')}`
+}
+
+function getMotivationalMessage(distanceKm: number): string {
+  const messages = [
+    '¡Genial! Cada kilómetro cuenta. 💪',
+    '¡Buenísimo! Sigue así. 🏃',
+    '¡Increíble! Tu cuerpo te lo agradece. ✨',
+    '¡Perfecto! Una ruta más en tu historial. 🎯',
+    '¡Enhorabuena! Estás en racha. 🔥',
+    '¡Muy bien! La constancia es clave. 🌟',
+    '¡Excelente! Cada paso suma. 👟',
+  ]
+  if (distanceKm >= 5) {
+    const long = [
+      '¡5 km o más! Eres una máquina. 🚀',
+      '¡Ruta larga completada! Impresionante. 💪',
+    ]
+    messages.push(...long)
+  }
+  if (distanceKm >= 10) {
+    messages.push('¡10 km! Nivel profesional. 🏆')
+  }
+  return messages[Math.floor(Math.random() * messages.length)]
 }
 
 export function Sports({ state, setState }: Props) {
@@ -88,9 +114,7 @@ export function Sports({ state, setState }: Props) {
     if (!mapRef.current) {
       const center: [number, number] = points.length ? [points[0].lat, points[0].lng] : [40.4, -3.7]
       const map = L.map(container).setView(center, 15)
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap',
-      }).addTo(map)
+      L.tileLayer(MAP_TILES, { attribution: MAP_ATTRIBUTION, subdomains: 'abcd' }).addTo(map)
       mapRef.current = map
     }
     const map = mapRef.current
@@ -112,9 +136,7 @@ export function Sports({ state, setState }: Props) {
       const latlngs: [number, number][] = r.points.map((p) => [p.lat, p.lng])
       const center: [number, number] = latlngs.length ? latlngs[Math.floor(latlngs.length / 2)] : [40.4, -3.7]
       const map = L.map(viewMapRef.current).setView(center, 14)
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap',
-      }).addTo(map)
+      L.tileLayer(MAP_TILES, { attribution: MAP_ATTRIBUTION, subdomains: 'abcd' }).addTo(map)
       if (latlngs.length >= 2) {
         L.polyline(latlngs, { color: '#00e5c0', weight: 4 }).addTo(map)
         map.fitBounds(L.latLngBounds(latlngs as L.LatLngExpression[]), { padding: [30, 30] })
@@ -130,6 +152,9 @@ export function Sports({ state, setState }: Props) {
   }, [viewRoute])
 
   const startRoute = () => {
+    if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+      Notification.requestPermission().catch(() => {})
+    }
     setPoints([])
     setElapsedMs(0)
     setStartTime(Date.now())
@@ -164,7 +189,13 @@ export function Sports({ state, setState }: Props) {
     setTrackingStatus('idle')
     setPoints([])
     setStartTime(null)
-    toast('Ruta guardada')
+    const msg = getMotivationalMessage(route.distanceKm)
+    toast(msg)
+    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+      try {
+        new Notification('Ruta guardada 🏃', { body: `${route.distanceKm.toFixed(2)} km · ${msg}`, icon: '/icon-192.png' })
+      } catch {}
+    }
   }
 
   const cancelRoute = () => {
@@ -183,88 +214,69 @@ export function Sports({ state, setState }: Props) {
   const isTracking = trackingStatus === 'recording' || trackingStatus === 'paused'
 
   return (
-    <div className="page-wrap">
-      <div style={{ marginBottom: 16 }}>
-        <div className="page-title">Sports</div>
-        <div className="page-sub">Rutas de correr o andar</div>
+    <div className={`page-wrap sport-page${isTracking ? ' sport-page-tracking' : ''}`}>
+      <div className="sport-header">
+        <div>
+          <div className="page-title" style={{ marginBottom: 2 }}>Sports</div>
+          <div className="page-sub">Rutas de correr o andar</div>
+        </div>
+        {!isTracking && (
+          <button type="button" className="btn btn-primary sport-btn-start" onClick={startRoute}>
+            🏃 Nueva ruta
+          </button>
+        )}
       </div>
 
       {!isTracking ? (
         <>
-          <button
-            type="button"
-            className="btn btn-primary btn-full"
-            style={{ marginBottom: 20 }}
-            onClick={startRoute}
-          >
-            🏃 Nueva ruta
-          </button>
           {!state.sportRoutes.length ? (
-            <div className="empty-state">
-              <div className="empty-icon">🛤️</div>
-              <div>Aún no hay rutas guardadas</div>
-              <div style={{ fontSize: 13, color: 'var(--text2)', marginTop: 8 }}>Pulsa «Nueva ruta» e inicia para empezar a grabar</div>
+            <div className="sport-empty">
+              <div className="sport-empty-icon">🛤️</div>
+              <div className="sport-empty-title">Aún no hay rutas guardadas</div>
+              <div className="sport-empty-sub">Pulsa «Nueva ruta» e inicia para empezar a grabar</div>
             </div>
           ) : (
-            <div className="sport-routes-list">
+            <div className="sport-routes-grid">
               {state.sportRoutes.map((r) => (
-                <div key={r.id} className="card" style={{ marginBottom: 12 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-                    <div>
-                      <div style={{ fontWeight: 700, fontSize: 16 }}>{r.distanceKm.toFixed(2)} km</div>
-                      <div style={{ fontSize: 12, color: 'var(--text2)' }}>
-                        {r.startedAt} {r.startedAt !== r.finishedAt ? `– ${r.finishedAt}` : ''}
-                      </div>
-                    </div>
-                    <div style={{ display: 'flex', gap: 6 }}>
-                      <button type="button" className="btn btn-ghost btn-icon btn-sm" onClick={() => setViewRoute(r)} aria-label="Ver mapa">
-                        🗺️
-                      </button>
-                      <button type="button" className="btn btn-ghost btn-icon btn-sm" onClick={() => deleteRoute(r.id)} aria-label="Eliminar">
-                        ×
-                      </button>
-                    </div>
+                <div key={r.id} className="sport-route-card">
+                  <div className="sport-route-card-main">
+                    <span className="sport-route-distance">{r.distanceKm.toFixed(2)} km</span>
+                    <span className="sport-route-date">{r.startedAt}</span>
                   </div>
-                  <button type="button" className="btn btn-ghost" style={{ width: '100%', fontSize: 13 }} onClick={() => setViewRoute(r)}>
-                    Ver en mapa
-                  </button>
+                  <div className="sport-route-card-actions">
+                    <button type="button" className="btn btn-ghost btn-sm" onClick={() => setViewRoute(r)}>Ver mapa</button>
+                    <button type="button" className="sport-route-delete" onClick={() => deleteRoute(r.id)} aria-label="Eliminar">×</button>
+                  </div>
                 </div>
               ))}
             </div>
           )}
         </>
       ) : (
-        <>
+        <div className="sport-tracking">
           <div ref={mapContainerRef} className="sport-map-container" />
-          <div className="card" style={{ marginTop: 12, display: 'flex', justifyContent: 'space-around', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
-            <div>
-              <div style={{ fontSize: 11, color: 'var(--text2)', textTransform: 'uppercase' }}>Distancia</div>
-              <div style={{ fontSize: 22, fontWeight: 700 }}>{distanceKm.toFixed(2)} km</div>
+          <div className="sport-stats-bar">
+            <div className="sport-stat">
+              <span className="sport-stat-value">{distanceKm.toFixed(2)}</span>
+              <span className="sport-stat-unit">km</span>
             </div>
-            <div>
-              <div style={{ fontSize: 11, color: 'var(--text2)', textTransform: 'uppercase' }}>Tiempo</div>
-              <div style={{ fontSize: 22, fontWeight: 700 }}>{formatDuration(elapsedMs)}</div>
+            <div className="sport-stat-divider" />
+            <div className="sport-stat">
+              <span className="sport-stat-value">{formatDuration(elapsedMs)}</span>
+              <span className="sport-stat-unit">tiempo</span>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+          <div className="sport-controls">
             {trackingStatus === 'recording' && (
-              <button type="button" className="btn btn-ghost" style={{ flex: 1 }} onClick={pauseRoute}>
-                ⏸ Pausar
-              </button>
+              <button type="button" className="btn btn-ghost sport-control-btn" onClick={pauseRoute}>⏸ Pausar</button>
             )}
             {trackingStatus === 'paused' && (
-              <button type="button" className="btn btn-primary" style={{ flex: 1 }} onClick={resumeRoute}>
-                ▶ Reanudar
-              </button>
+              <button type="button" className="btn btn-primary sport-control-btn" onClick={resumeRoute}>▶ Reanudar</button>
             )}
-            <button type="button" className="btn btn-ghost" style={{ flex: 1 }} onClick={cancelRoute}>
-              Cancelar
-            </button>
-            <button type="button" className="btn btn-primary" style={{ flex: 1 }} onClick={finishRoute}>
-              ✓ Finalizar ruta
-            </button>
+            <button type="button" className="btn btn-ghost sport-control-btn" onClick={cancelRoute}>Cancelar</button>
+            <button type="button" className="btn btn-primary sport-control-btn sport-control-finish" onClick={finishRoute}>✓ Finalizar</button>
           </div>
-        </>
+        </div>
       )}
 
       {viewRoute && (
