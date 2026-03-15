@@ -191,10 +191,22 @@ export function Sports({ state, setState }: Props) {
     setStartTime(null)
     const msg = getMotivationalMessage(route.distanceKm)
     toast(msg)
-    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+    const showNativeNotification = () => {
       try {
-        new Notification('Ruta guardada 🏃', { body: `${route.distanceKm.toFixed(2)} km · ${msg}`, icon: '/icon-192.png' })
+        new Notification('Ruta guardada 🏃', {
+          body: `${route.distanceKm.toFixed(2)} km · ${msg}`,
+          icon: window.location.origin + '/icon-192.png',
+        })
       } catch {}
+    }
+    if (typeof Notification !== 'undefined') {
+      if (Notification.permission === 'granted') {
+        showNativeNotification()
+      } else if (Notification.permission === 'default') {
+        Notification.requestPermission().then((p) => {
+          if (p === 'granted') showNativeNotification()
+        }).catch(() => {})
+      }
     }
   }
 
