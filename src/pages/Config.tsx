@@ -299,12 +299,70 @@ export function Config({ state, setState, onReset }: Props) {
     { id: 'openai', label: 'OpenAI', desc: 'gpt-4o-mini — Usa proxy CORS automático' },
   ]
 
+  type ConfigSection = 'ia' | 'integrations' | 'security' | 'appearance' | 'notifications' | 'data' | null
+  const [configSection, setConfigSection] = useState<ConfigSection>(null)
+
+  const menuItems: { id: ConfigSection; label: string; emoji: string }[] = [
+    { id: 'ia', label: 'IA', emoji: '🤖' },
+    { id: 'integrations', label: 'Integraciones', emoji: '🔗' },
+    { id: 'security', label: 'Seguridad', emoji: '🔒' },
+    { id: 'appearance', label: 'Apariencia', emoji: '🎨' },
+    { id: 'notifications', label: 'Notificaciones', emoji: '🔔' },
+    { id: 'data', label: 'Datos', emoji: '📦' },
+  ]
+
+  const sectionTitles: Record<NonNullable<ConfigSection>, string> = {
+    ia: 'IA',
+    integrations: 'Integraciones',
+    security: 'Seguridad',
+    appearance: 'Apariencia',
+    notifications: 'Notificaciones',
+    data: 'Datos',
+  }
+
+  const renderBackHeader = () => (
+    <div className="config-back-header">
+      <button type="button" className="config-back-btn" onClick={() => setConfigSection(null)} aria-label="Volver">
+        ←
+      </button>
+      <span className="config-back-title">{configSection ? sectionTitles[configSection] : ''}</span>
+    </div>
+  )
+
+  if (configSection === null) {
+    return (
+      <div className="page-wrap">
+        <div style={{ marginBottom: 24 }}>
+          <div className="page-title">Configuración</div>
+          <div className="page-sub">Elige una sección</div>
+        </div>
+        <div className="config-menu">
+          {menuItems.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              className="config-menu-item"
+              onClick={() => setConfigSection(item.id)}
+            >
+              <span className="config-menu-emoji">{item.emoji}</span>
+              <span className="config-menu-label">{item.label}</span>
+              <span className="config-menu-arrow">›</span>
+            </button>
+          ))}
+        </div>
+        <div style={{ textAlign: 'center', color: 'var(--text2)', fontSize: 12, padding: '20px 0' }}>
+          MyLife · Datos en tu dispositivo
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="page-wrap">
-      <div style={{ marginBottom: 24 }}>
-        <div className="page-title">Configuración</div>
-      </div>
+      {renderBackHeader()}
 
+      {configSection === 'ia' && (
+        <>
       {/* Provider */}
       <Section title="Proveedor de IA">
         {providers.map(p => (
@@ -360,9 +418,12 @@ export function Config({ state, setState, onReset }: Props) {
         </div>
         <button className="btn btn-primary btn-full" onClick={saveKeys}>Guardar configuración</button>
       </Section>
+        </>
+      )}
 
-      {/* Integraciones */}
-      <Section title="Integraciones">
+      {configSection === 'integrations' && (
+      <>
+      <Section title="Strava">
         <div style={{ marginBottom: 12 }}>
           <div style={{ fontWeight: 500, fontSize: 15, marginBottom: 4 }}>Strava</div>
           <div style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 10 }}>
@@ -434,9 +495,12 @@ export function Config({ state, setState, onReset }: Props) {
           </p>
         )}
       </Section>
+      </>
+      )}
 
-      {/* Seguridad: huella y PIN */}
-      <Section title="Seguridad">
+      {configSection === 'security' && (
+      <>
+      <Section title="Desbloqueo">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', marginBottom: 8 }}>
           <div>
             <div style={{ fontWeight: 500, fontSize: 15 }}>Desbloquear con huella</div>
@@ -472,9 +536,12 @@ export function Config({ state, setState, onReset }: Props) {
           </div>
         )}
       </Section>
+      </>
+      )}
 
-      {/* Theme */}
-      <Section title="Apariencia">
+      {configSection === 'appearance' && (
+      <>
+      <Section title="Tema y color">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', marginBottom: 12 }}>
           <div>
             <div style={{ fontWeight: 500, fontSize: 15 }}>Modo claro</div>
@@ -503,8 +570,11 @@ export function Config({ state, setState, onReset }: Props) {
           </div>
         </div>
       </Section>
+      </>
+      )}
 
-      {/* Notifications */}
+      {configSection === 'notifications' && (
+      <>
       <Section title="Notificaciones">
         {[
           { key: 'habits' as const, label: 'Recordatorio de hábitos', sub: 'Cada día a las 20:00' },
@@ -522,9 +592,12 @@ export function Config({ state, setState, onReset }: Props) {
           🔔 Activar permisos de notificación
         </button>
       </Section>
+      </>
+      )}
 
-      {/* Data */}
-      <Section title="Datos">
+      {configSection === 'data' && (
+      <>
+      <Section title="Exportar, importar y borrar">
         <div className="grid-2" style={{ marginBottom: 8 }}>
           <button className="btn btn-ghost" onClick={exportData}>📤 Exportar</button>
           <button className="btn btn-ghost" onClick={importData}>📥 Importar</button>
@@ -534,9 +607,11 @@ export function Config({ state, setState, onReset }: Props) {
         </button>
         <button className="btn btn-danger btn-full" onClick={handleReset}>⚠️ Borrar todos los datos</button>
       </Section>
+      </>
+      )}
 
       <div style={{ textAlign: 'center', color: 'var(--text2)', fontSize: 12, padding: '20px 0' }}>
-        MyLife v1.0 · Datos guardados localmente en tu dispositivo
+        MyLife · Datos en tu dispositivo
       </div>
     </div>
   )

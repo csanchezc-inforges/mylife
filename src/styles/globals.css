@@ -423,6 +423,77 @@ textarea { resize: vertical; min-height: 80px; }
 .page-title { font-family: 'DM Sans', sans-serif; font-size: 26px; font-weight: 700; letter-spacing: -0.3px; }
 .page-sub { color: var(--text2); font-size: 13px; margin-top: 2px; }
 
+/* Config: menú y navegación */
+.config-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.config-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 16px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background .2s, border-color .2s;
+  text-align: left;
+}
+.config-menu-item:hover {
+  background: var(--surface2);
+  border-color: var(--border2);
+}
+.config-menu-emoji {
+  font-size: 22px;
+  line-height: 1;
+}
+.config-menu-label {
+  flex: 1;
+}
+.config-menu-arrow {
+  color: var(--text2);
+  font-size: 20px;
+  line-height: 1;
+}
+.config-back-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.config-back-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 20px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background .2s;
+}
+.config-back-btn:hover {
+  background: var(--surface2);
+}
+.config-back-title {
+  font-size: 18px;
+  font-weight: 700;
+  font-family: 'DM Sans', sans-serif;
+}
+
 /* Empty state */
 .empty-state { text-align: center; padding: 48px 24px; color: var(--text2); }
 .empty-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.5; }
