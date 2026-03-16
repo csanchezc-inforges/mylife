@@ -13,6 +13,9 @@ export function Config({ state, setState, onReset }: Props) {
   const [claudeKey, setClaudeKey] = useState(state.config.claudeKey)
   const [openaiKey, setOpenaiKey] = useState(state.config.openaiKey)
   const [stravaToken, setStravaToken] = useState(state.config.integrations?.stravaToken ?? '')
+  const [stravaRefreshToken, setStravaRefreshToken] = useState(state.config.integrations?.stravaRefreshToken ?? '')
+  const [stravaClientId, setStravaClientId] = useState(state.config.integrations?.stravaClientId ?? '')
+  const [stravaClientSecret, setStravaClientSecret] = useState(state.config.integrations?.stravaClientSecret ?? '')
   const [stravaSyncing, setStravaSyncing] = useState(false)
 
   const selectProvider = (p: Provider) => setState(s => ({ ...s, config: { ...s.config, provider: p } }))
@@ -53,7 +56,13 @@ export function Config({ state, setState, onReset }: Props) {
         ...s.config,
         claudeKey,
         openaiKey,
-        integrations: { ...(s.config.integrations || {}), stravaToken: stravaToken.trim() || undefined },
+        integrations: {
+          ...(s.config.integrations || {}),
+          stravaToken: stravaToken.trim() || undefined,
+          stravaRefreshToken: stravaRefreshToken.trim() || undefined,
+          stravaClientId: stravaClientId.trim() || undefined,
+          stravaClientSecret: stravaClientSecret.trim() || undefined,
+        },
       },
     }))
     toast('✅ Configuración guardada')
@@ -100,20 +109,67 @@ export function Config({ state, setState, onReset }: Props) {
     return coords
   }
 
+  async function refreshStravaToken(): Promise<string | null> {
+    const int = state.config.integrations
+    const refresh = (int?.stravaRefreshToken ?? '').trim()
+    const clientId = (int?.stravaClientId ?? '').trim()
+    const clientSecret = (int?.stravaClientSecret ?? '').trim()
+    if (!refresh || !clientId || !clientSecret) return null
+    const body = new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      grant_type: 'refresh_token',
+      refresh_token: refresh,
+    })
+    const res = await fetch('https://www.strava.com/oauth/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: body.toString(),
+    })
+    if (!res.ok) return null
+    const data = await res.json()
+    const newAccess = data.access_token
+    const newRefresh = data.refresh_token
+    if (!newAccess) return null
+    setState(s => ({
+      ...s,
+      config: {
+        ...s.config,
+        integrations: {
+          ...(s.config.integrations || {}),
+          stravaToken: newAccess,
+          stravaRefreshToken: newRefresh || s.config.integrations?.stravaRefreshToken,
+        },
+      },
+    }))
+    setStravaToken(newAccess)
+    if (newRefresh) setStravaRefreshToken(newRefresh)
+    return newAccess
+  }
+
   const syncStrava = async () => {
-    const token = stravaToken.trim() || state.config.integrations?.stravaToken
+    let token = stravaToken.trim() || state.config.integrations?.stravaToken
     if (!token) {
-      toast('Añade primero tu token personal de Strava')
+      toast('Añade primero tu token de acceso de Strava')
       return
     }
     try {
       setStravaSyncing(true)
-      const res = await fetch('https://www.strava.com/api/v3/athlete/activities?per_page=50', {
+      let res = await fetch('https://www.strava.com/api/v3/athlete/activities?per_page=50', {
         headers: { Authorization: `Bearer ${token}` },
       })
+      if (res.status === 401) {
+        const newToken = await refreshStravaToken()
+        if (newToken) {
+          token = newToken
+          res = await fetch('https://www.strava.com/api/v3/athlete/activities?per_page=50', {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+        }
+      }
       if (!res.ok) {
         if (res.status === 401) {
-          toast('Token de Strava no válido o sin permisos')
+          toast('Token caducado. Añade Client ID, Secret y token de actualización para renovación automática.')
         } else {
           toast('No se pudieron obtener las actividades de Strava')
         }
@@ -310,22 +366,49 @@ export function Config({ state, setState, onReset }: Props) {
         <div style={{ marginBottom: 12 }}>
           <div style={{ fontWeight: 500, fontSize: 15, marginBottom: 4 }}>Strava</div>
           <div style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 10 }}>
-            Conecta tu cuenta de Strava usando un <strong>token de acceso personal</strong> para importar tus carreras como rutas en la sección Sports.
-            El token se guarda <strong style={{ color: 'var(--text)' }}>solo en este dispositivo</strong>.
+            Conecta Strava para importar carreras a Sports. Si añades <strong>Client ID</strong>, <strong>Secret</strong> y <strong>token de actualización</strong>, el token de acceso se renovará solo cuando caduque.
           </div>
         </div>
         <div className="input-group">
-          <label className="input-label">Token personal de Strava</label>
+          <label className="input-label">Token de acceso</label>
           <input
             type="password"
             value={stravaToken}
             onChange={e => setStravaToken(e.target.value)}
-            placeholder="ej: 0123456789abcdef..."
+            placeholder="access_token de la respuesta OAuth"
           />
-          <p style={{ fontSize: 12, color: 'var(--text2)', marginTop: 6 }}>
-            Puedes crear un token desde tu panel de desarrollador de Strava (My API Application → Create &amp; Manage Access Tokens).
-          </p>
         </div>
+        <div className="input-group">
+          <label className="input-label">Token de actualización (refresh)</label>
+          <input
+            type="password"
+            value={stravaRefreshToken}
+            onChange={e => setStravaRefreshToken(e.target.value)}
+            placeholder="refresh_token (para renovación automática)"
+          />
+        </div>
+        <div className="input-group">
+          <label className="input-label">Client ID</label>
+          <input
+            type="text"
+            inputMode="numeric"
+            value={stravaClientId}
+            onChange={e => setStravaClientId(e.target.value)}
+            placeholder="Número de tu app en Strava"
+          />
+        </div>
+        <div className="input-group">
+          <label className="input-label">Client Secret</label>
+          <input
+            type="password"
+            value={stravaClientSecret}
+            onChange={e => setStravaClientSecret(e.target.value)}
+            placeholder="Secret de tu app en Strava"
+          />
+        </div>
+        <p style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 10 }}>
+          Los cuatro valores salen de la respuesta OAuth (access_token, refresh_token) y de Strava → Configuración API (Client ID, Client Secret). Todo se guarda solo en este dispositivo.
+        </p>
         <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
           <button
             type="button"

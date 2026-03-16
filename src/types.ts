@@ -96,8 +96,14 @@ export interface SportRoute {
 }
 
 export interface IntegrationsConfig {
-  /** Token de acceso personal de Strava (se guarda solo en este dispositivo) */
+  /** Token de acceso de Strava (se renueva automáticamente si hay refresh) */
   stravaToken?: string
+  /** Token de actualización para renovar el access_token cuando caduque */
+  stravaRefreshToken?: string
+  /** Client ID de la app en Strava (para renovación automática) */
+  stravaClientId?: string
+  /** Client Secret de la app en Strava (para renovación automática) */
+  stravaClientSecret?: string
   /** Última sincronización exitosa con Strava (ISO date) */
   stravaLastSync?: string
 }
