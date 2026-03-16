@@ -185,6 +185,10 @@ export function Config({ state, setState, onReset }: Props) {
         const id = `strava-${a.id}`
         const distanceKm = typeof a.distance === 'number' ? a.distance / 1000 : 0
         const start = (a.start_date_local || a.start_date || '').slice(0, 10) || new Date().toISOString().slice(0, 10)
+        const elapsedSeconds = typeof a.elapsed_time === 'number' ? a.elapsed_time : undefined
+        const durationMs = elapsedSeconds != null ? elapsedSeconds * 1000 : undefined
+        const avgSpeedKmh = durationMs && distanceKm > 0 ? distanceKm / (durationMs / 3_600_000) : undefined
+        const elevationGain = typeof a.total_elevation_gain === 'number' ? a.total_elevation_gain : undefined
         const poly = a.map?.summary_polyline as string | undefined
         const points = poly
           ? decodeStravaPolyline(poly).map(([lat, lng], idx) => ({
@@ -197,6 +201,9 @@ export function Config({ state, setState, onReset }: Props) {
           id,
           points,
           distanceKm: Math.round(distanceKm * 1000) / 1000,
+          durationMs,
+          avgSpeedKmh,
+          elevationGain,
           startedAt: start,
           finishedAt: start,
         }

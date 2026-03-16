@@ -25,6 +25,13 @@ function formatDuration(ms: number): string {
   return `${m}:${String(s % 60).padStart(2, '0')}`
 }
 
+function formatPace(minPerKm: number): string {
+  if (!isFinite(minPerKm) || minPerKm <= 0) return '--:--'
+  const m = Math.floor(minPerKm)
+  const s = Math.round((minPerKm - m) * 60)
+  return `${m}:${String(s).padStart(2, '0')}`
+}
+
 function getMotivationalMessage(distanceKm: number): string {
   const messages = [
     '¡Genial! Cada kilómetro cuenta. 💪',
@@ -62,6 +69,8 @@ export function Sports({ state, setState }: Props) {
   const viewMapInstanceRef = useRef<L.Map | null>(null)
 
   const distanceKm = points.length >= 2 ? totalDistanceKm(points) : 0
+  const liveAvgSpeedKmh = elapsedMs > 0 && distanceKm > 0 ? distanceKm / (elapsedMs / 3_600_000) : 0
+  const livePaceMinPerKm = distanceKm > 0 && elapsedMs > 0 ? (elapsedMs / 60_000) / distanceKm : 0
 
   const clearWatch = useCallback(() => {
     if (watchIdRef.current != null && navigator.geolocation) {
@@ -177,12 +186,18 @@ export function Sports({ state, setState }: Props) {
       return
     }
     const now = new Date().toISOString()
-    const startedAt = startTime ? new Date(startTime).toISOString().slice(0, 19).replace('T', ' ') : now
+    const startedAtIso = startTime ? new Date(startTime).toISOString().slice(0, 19).replace('T', ' ') : now
+    const firstTs = points[0]?.timestamp ?? Date.now()
+    const lastTs = points[points.length - 1]?.timestamp ?? Date.now()
+    const durationMs = Math.max(0, lastTs - firstTs)
+    const avgSpeedKmh = durationMs > 0 && distanceKm > 0 ? distanceKm / (durationMs / 3_600_000) : undefined
     const route: SportRoute = {
       id: uid(),
       points: [...points],
       distanceKm: Math.round(distanceKm * 1000) / 1000,
-      startedAt: startedAt.slice(0, 10),
+      durationMs,
+      avgSpeedKmh,
+      startedAt: startedAtIso.slice(0, 10),
       finishedAt: now.slice(0, 10),
     }
     setState((s) => ({ ...s, sportRoutes: [route, ...s.sportRoutes] }))
@@ -258,18 +273,36 @@ export function Sports({ state, setState }: Props) {
             </div>
           ) : (
             <div className="sport-routes-grid">
-              {state.sportRoutes.map((r) => (
-                <div key={r.id} className="sport-route-card">
-                  <div className="sport-route-card-main">
-                    <span className="sport-route-distance">{r.distanceKm.toFixed(2)} km</span>
-                    <span className="sport-route-date">{r.startedAt}</span>
+              {state.sportRoutes.map((r) => {
+                const dur = r.durationMs
+                const avgSpeed = r.avgSpeedKmh
+                const paceMinPerKm = dur && r.distanceKm > 0 ? (dur / 60_000) / r.distanceKm : undefined
+                return (
+                  <div key={r.id} className="sport-route-card">
+                    <div className="sport-route-card-main">
+                      <span className="sport-route-distance">{r.distanceKm.toFixed(2)} km</span>
+                      <span className="sport-route-date">{r.startedAt}</span>
+                      <div style={{ fontSize: 12, color: 'var(--text2)', marginTop: 4 }}>
+                        {dur ? (
+                          <>
+                            Tiempo: {formatDuration(dur)} · Vel media: {avgSpeed ? avgSpeed.toFixed(1) : (r.distanceKm > 0 ? (r.distanceKm / ((dur / 3_600_000) || 1)).toFixed(1) : '0.0')} km/h
+                            {' · Ritmo: '}{paceMinPerKm ? `${formatPace(paceMinPerKm)} /km` : '--:-- /km'}
+                          </>
+                        ) : (
+                          <>Tiempo y ritmo no disponibles</>
+                        )}
+                        {typeof r.elevationGain === 'number' && (
+                          <> · Desnivel: {Math.round(r.elevationGain)} m</>
+                        )}
+                      </div>
+                    </div>
+                    <div className="sport-route-card-actions">
+                      <button type="button" className="btn btn-ghost btn-sm" onClick={() => setViewRoute(r)}>Ver mapa</button>
+                      <button type="button" className="sport-route-delete" onClick={() => deleteRoute(r.id)} aria-label="Eliminar">×</button>
+                    </div>
                   </div>
-                  <div className="sport-route-card-actions">
-                    <button type="button" className="btn btn-ghost btn-sm" onClick={() => setViewRoute(r)}>Ver mapa</button>
-                    <button type="button" className="sport-route-delete" onClick={() => deleteRoute(r.id)} aria-label="Eliminar">×</button>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </>
@@ -285,6 +318,11 @@ export function Sports({ state, setState }: Props) {
             <div className="sport-stat">
               <span className="sport-stat-value">{formatDuration(elapsedMs)}</span>
               <span className="sport-stat-unit">tiempo</span>
+            </div>
+            <div className="sport-stat-divider" />
+            <div className="sport-stat">
+              <span className="sport-stat-value">{liveAvgSpeedKmh > 0 ? liveAvgSpeedKmh.toFixed(1) : '0.0'}</span>
+              <span className="sport-stat-unit">km/h</span>
             </div>
           </div>
           <div className="sport-controls">

@@ -91,6 +91,12 @@ export interface SportRoute {
   id: string
   points: SportRoutePoint[]
   distanceKm: number
+  /** Duración total de la actividad en ms (si se conoce) */
+  durationMs?: number
+  /** Velocidad media en km/h (si se conoce) */
+  avgSpeedKmh?: number
+  /** Desnivel positivo acumulado en metros (si se conoce) */
+  elevationGain?: number
   startedAt: string
   finishedAt: string  // YYYY-MM-DD
 }
