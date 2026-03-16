@@ -95,6 +95,13 @@ export interface SportRoute {
   finishedAt: string  // YYYY-MM-DD
 }
 
+export interface IntegrationsConfig {
+  /** Token de acceso personal de Strava (se guarda solo en este dispositivo) */
+  stravaToken?: string
+  /** Última sincronización exitosa con Strava (ISO date) */
+  stravaLastSync?: string
+}
+
 export interface Config {
   provider: Provider
   claudeKey: string
@@ -103,6 +110,8 @@ export interface Config {
   biometricEnabled?: boolean
   /** PIN de desbloqueo (4 dígitos), alternativo a la huella */
   unlockPin?: string
+  /** Integraciones con servicios externos (Strava, etc.) */
+  integrations?: IntegrationsConfig
 }
 
 export interface NotifConfig {
@@ -167,7 +176,13 @@ export const DEFAULT_STATE: AppState = {
   habits: [],
   habitLogs: {},
   sportRoutes: [],
-  config: { provider: 'claude', claudeKey: '', openaiKey: '', biometricEnabled: false },
+  config: {
+    provider: 'claude',
+    claudeKey: '',
+    openaiKey: '',
+    biometricEnabled: false,
+    integrations: {},
+  },
   notif: { habits: false, daily: false },
   theme: 'dark',
   accentColor: '#00e5c0',

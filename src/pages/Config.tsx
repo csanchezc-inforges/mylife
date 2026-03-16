@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { AppState, Provider, ACCENT_COLORS } from '../types'
+import { AppState, Provider, ACCENT_COLORS, SportRoute } from '../types'
 import { toast } from '../components/Toast'
 import { isBiometricSupported, registerBiometric, clearBiometricCredential } from '../lib/biometric'
 
@@ -12,6 +12,8 @@ interface Props {
 export function Config({ state, setState, onReset }: Props) {
   const [claudeKey, setClaudeKey] = useState(state.config.claudeKey)
   const [openaiKey, setOpenaiKey] = useState(state.config.openaiKey)
+  const [stravaToken, setStravaToken] = useState(state.config.integrations?.stravaToken ?? '')
+  const [stravaSyncing, setStravaSyncing] = useState(false)
 
   const selectProvider = (p: Provider) => setState(s => ({ ...s, config: { ...s.config, provider: p } }))
   const toggleNotif = (key: 'habits' | 'daily') => setState(s => ({ ...s, notif: { ...s.notif, [key]: !s.notif[key] } }))
@@ -45,8 +47,134 @@ export function Config({ state, setState, onReset }: Props) {
   }
 
   const saveKeys = () => {
-    setState(s => ({ ...s, config: { ...s.config, claudeKey, openaiKey } }))
+    setState(s => ({
+      ...s,
+      config: {
+        ...s.config,
+        claudeKey,
+        openaiKey,
+        integrations: { ...(s.config.integrations || {}), stravaToken: stravaToken.trim() || undefined },
+      },
+    }))
     toast('✅ Configuración guardada')
+  }
+
+  function decodeStravaPolyline(encoded: string): [number, number][] {
+    let index = 0
+    const len = encoded.length
+    let lat = 0
+    let lng = 0
+    const coords: [number, number][] = []
+
+    while (index < len) {
+      let result = 0
+      let shift = 0
+      let b: number
+      do {
+        // eslint-disable-next-line no-bitwise
+        b = encoded.charCodeAt(index++) - 63
+        // eslint-disable-next-line no-bitwise
+        result |= (b & 0x1f) << shift
+        shift += 5
+      } while (b >= 0x20)
+      // eslint-disable-next-line no-bitwise
+      const dlat = (result & 1) ? ~(result >> 1) : (result >> 1)
+      lat += dlat
+
+      result = 0
+      shift = 0
+      do {
+        // eslint-disable-next-line no-bitwise
+        b = encoded.charCodeAt(index++) - 63
+        // eslint-disable-next-line no-bitwise
+        result |= (b & 0x1f) << shift
+        shift += 5
+      } while (b >= 0x20)
+      // eslint-disable-next-line no-bitwise
+      const dlng = (result & 1) ? ~(result >> 1) : (result >> 1)
+      lng += dlng
+
+      coords.push([lat / 1e5, lng / 1e5])
+    }
+
+    return coords
+  }
+
+  const syncStrava = async () => {
+    const token = stravaToken.trim() || state.config.integrations?.stravaToken
+    if (!token) {
+      toast('Añade primero tu token personal de Strava')
+      return
+    }
+    try {
+      setStravaSyncing(true)
+      const res = await fetch('https://www.strava.com/api/v3/athlete/activities?per_page=50', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!res.ok) {
+        if (res.status === 401) {
+          toast('Token de Strava no válido o sin permisos')
+        } else {
+          toast('No se pudieron obtener las actividades de Strava')
+        }
+        return
+      }
+      const activities: any[] = await res.json()
+      const runs = activities.filter(a => (a.sport_type || a.type) === 'Run')
+      if (!runs.length) {
+        toast('No se encontraron carreras en Strava')
+        return
+      }
+      const imported: SportRoute[] = runs.map(a => {
+        const id = `strava-${a.id}`
+        const distanceKm = typeof a.distance === 'number' ? a.distance / 1000 : 0
+        const start = (a.start_date_local || a.start_date || '').slice(0, 10) || new Date().toISOString().slice(0, 10)
+        const poly = a.map?.summary_polyline as string | undefined
+        const points = poly
+          ? decodeStravaPolyline(poly).map(([lat, lng], idx) => ({
+              lat,
+              lng,
+              timestamp: new Date(a.start_date_local || a.start_date || Date.now()).getTime() + idx * 1000,
+            }))
+          : []
+        return {
+          id,
+          points,
+          distanceKm: Math.round(distanceKm * 1000) / 1000,
+          startedAt: start,
+          finishedAt: start,
+        }
+      })
+
+      setState(s => {
+        const existing = new Set(s.sportRoutes.map(r => r.id))
+        const unique = imported.filter(r => !existing.has(r.id))
+        if (!unique.length) {
+          toast('Las carreras de Strava ya están importadas')
+          return {
+            ...s,
+            config: {
+              ...s.config,
+              integrations: { ...(s.config.integrations || {}), stravaToken: token, stravaLastSync: new Date().toISOString() },
+            },
+          }
+        }
+        toast(`✅ Importadas ${unique.length} carreras de Strava`)
+        return {
+          ...s,
+          sportRoutes: [...unique, ...s.sportRoutes],
+          config: {
+            ...s.config,
+            integrations: { ...(s.config.integrations || {}), stravaToken: token, stravaLastSync: new Date().toISOString() },
+          },
+        }
+      })
+    } catch (e) {
+      console.error(e)
+      toast('Error al sincronizar con Strava')
+    } finally {
+      setStravaSyncing(false)
+    }
   }
 
   const requestNotif = async () => {
@@ -175,6 +303,53 @@ export function Config({ state, setState, onReset }: Props) {
           💡 Las claves se guardan <strong style={{ color: 'var(--text)' }}>solo en tu dispositivo</strong>, nunca se envían a ningún servidor externo.
         </div>
         <button className="btn btn-primary btn-full" onClick={saveKeys}>Guardar configuración</button>
+      </Section>
+
+      {/* Integraciones */}
+      <Section title="Integraciones">
+        <div style={{ marginBottom: 12 }}>
+          <div style={{ fontWeight: 500, fontSize: 15, marginBottom: 4 }}>Strava</div>
+          <div style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 10 }}>
+            Conecta tu cuenta de Strava usando un <strong>token de acceso personal</strong> para importar tus carreras como rutas en la sección Sports.
+            El token se guarda <strong style={{ color: 'var(--text)' }}>solo en este dispositivo</strong>.
+          </div>
+        </div>
+        <div className="input-group">
+          <label className="input-label">Token personal de Strava</label>
+          <input
+            type="password"
+            value={stravaToken}
+            onChange={e => setStravaToken(e.target.value)}
+            placeholder="ej: 0123456789abcdef..."
+          />
+          <p style={{ fontSize: 12, color: 'var(--text2)', marginTop: 6 }}>
+            Puedes crear un token desde tu panel de desarrollador de Strava (My API Application → Create &amp; Manage Access Tokens).
+          </p>
+        </div>
+        <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            className="btn btn-ghost"
+            onClick={saveKeys}
+            style={{ flex: 1, minWidth: 0 }}
+          >
+            💾 Guardar token
+          </button>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={syncStrava}
+            disabled={stravaSyncing}
+            style={{ flex: 1.2, minWidth: 0 }}
+          >
+            {stravaSyncing ? 'Sincronizando…' : '⬇️ Importar carreras de Strava'}
+          </button>
+        </div>
+        {state.config.integrations?.stravaLastSync && (
+          <p style={{ fontSize: 12, color: 'var(--text2)', marginTop: 6 }}>
+            Última sincronización: {new Date(state.config.integrations.stravaLastSync).toLocaleString()}
+          </p>
+        )}
       </Section>
 
       {/* Seguridad: huella y PIN */}
