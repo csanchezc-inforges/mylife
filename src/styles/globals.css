@@ -450,9 +450,18 @@ textarea { resize: vertical; min-height: 80px; }
   background: var(--surface2);
   border-color: var(--border2);
 }
-.config-menu-emoji {
-  font-size: 22px;
-  line-height: 1;
+.config-menu-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  color: var(--text2);
+}
+.config-menu-item:hover .config-menu-icon,
+.config-menu-item:focus .config-menu-icon {
+  color: var(--text);
 }
 .config-menu-label {
   flex: 1;

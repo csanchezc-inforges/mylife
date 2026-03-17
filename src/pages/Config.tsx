@@ -1,7 +1,15 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { AppState, Provider, ACCENT_COLORS, SportRoute } from '../types'
 import { toast } from '../components/Toast'
 import { isBiometricSupported, registerBiometric, clearBiometricCredential } from '../lib/biometric'
+
+const iconS = { width: 22, height: 22, viewBox: '0 0 24 24', fill: 'none' as const, stroke: 'currentColor', strokeWidth: 1.8 }
+const ConfigIconIA = () => <svg {...iconS}><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6M9 13h6M9 17h4"/><path d="M12 4v2M12 18v2M4 12h2M18 12h2"/></svg>
+const ConfigIconLink = () => <svg {...iconS}><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+const ConfigIconLock = () => <svg {...iconS}><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+const ConfigIconPalette = () => <svg {...iconS}><circle cx="12" cy="12" r="10"/><path d="M12 6v2M8 12h2M14 12h2M12 16v2M6.34 8.34l1.42-1.42M17.66 8.34l-1.42-1.42M6.34 15.66l1.42 1.42M17.66 15.66l-1.42 1.42"/></svg>
+const ConfigIconBell = () => <svg {...iconS}><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+const ConfigIconData = () => <svg {...iconS}><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
 
 interface Props {
   state: AppState
@@ -309,13 +317,13 @@ export function Config({ state, setState, onReset }: Props) {
   type ConfigSection = 'ia' | 'integrations' | 'security' | 'appearance' | 'notifications' | 'data' | null
   const [configSection, setConfigSection] = useState<ConfigSection>(null)
 
-  const menuItems: { id: ConfigSection; label: string; emoji: string }[] = [
-    { id: 'ia', label: 'IA', emoji: '🤖' },
-    { id: 'integrations', label: 'Integraciones', emoji: '🔗' },
-    { id: 'security', label: 'Seguridad', emoji: '🔒' },
-    { id: 'appearance', label: 'Apariencia', emoji: '🎨' },
-    { id: 'notifications', label: 'Notificaciones', emoji: '🔔' },
-    { id: 'data', label: 'Datos', emoji: '📦' },
+  const menuItems: { id: ConfigSection; label: string; icon: React.ReactNode }[] = [
+    { id: 'ia', label: 'IA', icon: <ConfigIconIA /> },
+    { id: 'integrations', label: 'Integraciones', icon: <ConfigIconLink /> },
+    { id: 'security', label: 'Seguridad', icon: <ConfigIconLock /> },
+    { id: 'appearance', label: 'Apariencia', icon: <ConfigIconPalette /> },
+    { id: 'notifications', label: 'Notificaciones', icon: <ConfigIconBell /> },
+    { id: 'data', label: 'Datos', icon: <ConfigIconData /> },
   ]
 
   const sectionTitles: Record<NonNullable<ConfigSection>, string> = {
@@ -351,7 +359,7 @@ export function Config({ state, setState, onReset }: Props) {
               className="config-menu-item"
               onClick={() => setConfigSection(item.id)}
             >
-              <span className="config-menu-emoji">{item.emoji}</span>
+              <span className="config-menu-icon">{item.icon}</span>
               <span className="config-menu-label">{item.label}</span>
               <span className="config-menu-arrow">›</span>
             </button>
