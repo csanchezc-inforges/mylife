@@ -129,6 +129,8 @@ export interface Config {
 export interface NotifConfig {
   habits: boolean
   daily: boolean
+  /** Notificación con tareas que vencen hoy o mañana */
+  tasks: boolean
 }
 
 export type Theme = 'light' | 'dark'
@@ -195,7 +197,7 @@ export const DEFAULT_STATE: AppState = {
     biometricEnabled: false,
     integrations: {},
   },
-  notif: { habits: false, daily: false },
+  notif: { habits: false, daily: false, tasks: false },
   theme: 'dark',
   accentColor: '#00e5c0',
 }

@@ -19,7 +19,7 @@ export function Config({ state, setState, onReset }: Props) {
   const [stravaSyncing, setStravaSyncing] = useState(false)
 
   const selectProvider = (p: Provider) => setState(s => ({ ...s, config: { ...s.config, provider: p } }))
-  const toggleNotif = (key: 'habits' | 'daily') => setState(s => ({ ...s, notif: { ...s.notif, [key]: !s.notif[key] } }))
+  const toggleNotif = (key: 'habits' | 'daily' | 'tasks') => setState(s => ({ ...s, notif: { ...s.notif, [key]: !s.notif[key] } }))
 
   const [biometricLoading, setBiometricLoading] = useState(false)
   const biometricOn = Boolean(state.config.biometricEnabled)
@@ -586,6 +586,7 @@ export function Config({ state, setState, onReset }: Props) {
         {[
           { key: 'habits' as const, label: 'Recordatorio de hábitos', sub: 'Cada día a las 20:00' },
           { key: 'daily' as const, label: 'Resumen diario', sub: 'Cada mañana a las 9:00' },
+          { key: 'tasks' as const, label: 'Tareas que vencen hoy o mañana', sub: 'Al abrir la app o en segundo plano (Periodic Sync en Chrome; máx. 1 vez al día)' },
         ].map(n => (
           <div key={n.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', marginBottom: 8 }}>
             <div>

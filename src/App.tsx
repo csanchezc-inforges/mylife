@@ -11,6 +11,12 @@ import { Tasks } from './pages/Tasks'
 import { Habits } from './pages/Habits'
 import { Config } from './pages/Config'
 import { isUnlocked, setUnlocked } from './lib/biometric'
+import {
+  checkAndShowTaskReminder,
+  getTasksDueTodayOrTomorrow,
+  writeReminderToIDB,
+  getTaskReminderLastDate,
+} from './lib/taskReminder'
 
 const INSTALL_BANNER_DISMISS_KEY = 'mylife-install-banner-dismissed'
 const DISMISS_DAYS = 7
@@ -87,6 +93,36 @@ export default function App() {
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', state.theme)
   }, [state.theme])
+
+  // Recordatorio de tareas que vencen hoy o mañana (al abrir o al volver a la app)
+  useEffect(() => {
+    if (!state.notif.tasks) return
+    const run = () => {
+      checkAndShowTaskReminder(state.tasks, state.notif.tasks)
+      const due = getTasksDueTodayOrTomorrow(state.tasks)
+      const last = getTaskReminderLastDate()
+      writeReminderToIDB({
+        tasksDue: due.map((t) => ({ name: t.name, due: t.due })),
+        lastNotifiedDate: last,
+      })
+    }
+    run()
+    const onVisible = () => run()
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
+  }, [state.tasks, state.notif.tasks])
+
+  // Registrar Periodic Background Sync para notificar con la app cerrada (Chrome y compatibles)
+  useEffect(() => {
+    if (!state.notif.tasks || typeof Notification === 'undefined' || Notification.permission !== 'granted') return
+    if (!('serviceWorker' in navigator)) return
+    navigator.serviceWorker.ready.then((reg) => {
+      const r = reg as ServiceWorkerRegistration & { periodicSync?: { register: (tag: string, opts?: { minInterval: number }) => Promise<void> } }
+      if (r.periodicSync?.register) {
+        r.periodicSync.register('mylife-task-reminder', { minInterval: 24 * 60 * 60 }).catch(() => {})
+      }
+    })
+  }, [state.notif.tasks])
 
   useEffect(() => {
     document.documentElement.style.setProperty('--accent', state.accentColor || '#00e5c0')
