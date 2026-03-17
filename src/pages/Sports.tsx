@@ -3,7 +3,6 @@ import { AppState, SportRoute, SportRoutePoint } from '../types'
 import { uid } from '../hooks/useStore'
 import { totalDistanceKm } from '../lib/geo'
 import { toast } from '../components/Toast'
-import { Modal } from '../components/Modal'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
@@ -30,6 +29,71 @@ function formatPace(minPerKm: number): string {
   const m = Math.floor(minPerKm)
   const s = Math.round((minPerKm - m) * 60)
   return `${m}:${String(s).padStart(2, '0')}`
+}
+
+/** km por día/mes/año para gráficos */
+function getRouteAggregates(routes: SportRoute[]) {
+  const weekly = (() => {
+    const out: { label: string; km: number; date: string }[] = []
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date()
+      d.setDate(d.getDate() - i)
+      const date = d.toISOString().split('T')[0]
+      const label = d.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric' })
+      const km = routes.filter((r) => r.startedAt === date).reduce((s, r) => s + r.distanceKm, 0)
+      out.push({ label, km, date })
+    }
+    return out
+  })()
+  const monthly = (() => {
+    const out: { label: string; km: number; monthKey: string }[] = []
+    const now = new Date()
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+      const km = routes.filter((r) => r.startedAt.startsWith(monthKey)).reduce((s, r) => s + r.distanceKm, 0)
+      out.push({ label: d.toLocaleDateString('es-ES', { month: 'short', year: '2-digit' }), km, monthKey })
+    }
+    return out
+  })()
+  const yearly = (() => {
+    const out: { label: string; km: number; yearKey: string }[] = []
+    const y = new Date().getFullYear()
+    for (let i = 4; i >= 0; i--) {
+      const yearKey = String(y - i)
+      const km = routes.filter((r) => r.startedAt.startsWith(yearKey)).reduce((s, r) => s + r.distanceKm, 0)
+      out.push({ label: yearKey, km, yearKey })
+    }
+    return out
+  })()
+  return { weekly, monthly, yearly }
+}
+
+function BarChart({
+  data,
+  maxKm,
+  height = 120,
+}: {
+  data: { label: string; km: number }[]
+  maxKm?: number
+  height?: number
+}) {
+  const max = maxKm ?? Math.max(1, ...data.map((d) => d.km))
+  return (
+    <div className="sport-chart" style={{ height }}>
+      {data.map((d, i) => (
+        <div key={i} className="sport-chart-bar-wrap">
+          <div
+            className="sport-chart-bar"
+            style={{ height: max > 0 ? `${(d.km / max) * 100}%` : '0%' }}
+            title={`${d.label}: ${d.km.toFixed(1)} km`}
+          />
+          <span className="sport-chart-label">{d.label}</span>
+          {d.km > 0 && <span className="sport-chart-value">{d.km.toFixed(1)}</span>}
+        </div>
+      ))}
+    </div>
+  )
 }
 
 function getMotivationalMessage(distanceKm: number): string {
@@ -248,6 +312,10 @@ export function Sports({ state, setState }: Props) {
   }
 
   const isTracking = trackingStatus === 'recording' || trackingStatus === 'paused'
+  const aggregates = getRouteAggregates(state.sportRoutes)
+  const [chartPeriod, setChartPeriod] = useState<'weekly' | 'monthly' | 'yearly'>('weekly')
+  const chartData = chartPeriod === 'weekly' ? aggregates.weekly : chartPeriod === 'monthly' ? aggregates.monthly : aggregates.yearly
+  const chartMax = Math.max(1, ...chartData.map((d) => d.km))
 
   return (
     <div className={`page-wrap sport-page${isTracking ? ' sport-page-tracking' : ''}`}>
@@ -272,38 +340,65 @@ export function Sports({ state, setState }: Props) {
               <div className="sport-empty-sub">Pulsa «Nueva ruta» e inicia para empezar a grabar</div>
             </div>
           ) : (
-            <div className="sport-routes-grid">
-              {state.sportRoutes.map((r) => {
-                const dur = r.durationMs
-                const avgSpeed = r.avgSpeedKmh
-                const paceMinPerKm = dur && r.distanceKm > 0 ? (dur / 60_000) / r.distanceKm : undefined
-                return (
-                  <div key={r.id} className="sport-route-card">
-                    <div className="sport-route-card-main">
-                      <span className="sport-route-distance">{r.distanceKm.toFixed(2)} km</span>
-                      <span className="sport-route-date">{r.startedAt}</span>
-                      <div style={{ fontSize: 12, color: 'var(--text2)', marginTop: 4 }}>
-                        {dur ? (
-                          <>
-                            Tiempo: {formatDuration(dur)} · Vel media: {avgSpeed ? avgSpeed.toFixed(1) : (r.distanceKm > 0 ? (r.distanceKm / ((dur / 3_600_000) || 1)).toFixed(1) : '0.0')} km/h
-                            {' · Ritmo: '}{paceMinPerKm ? `${formatPace(paceMinPerKm)} /km` : '--:-- /km'}
-                          </>
-                        ) : (
-                          <>Tiempo y ritmo no disponibles</>
-                        )}
-                        {typeof r.elevationGain === 'number' && (
-                          <> · Desnivel: {Math.round(r.elevationGain)} m</>
-                        )}
+            <>
+              <section className="sport-evolution">
+                <h3 className="sport-evolution-title">Evolución (km)</h3>
+                <div className="sport-evolution-tabs">
+                  {(['weekly', 'monthly', 'yearly'] as const).map((p) => (
+                    <button
+                      key={p}
+                      type="button"
+                      className={`sport-evolution-tab${chartPeriod === p ? ' active' : ''}`}
+                      onClick={() => setChartPeriod(p)}
+                    >
+                      {p === 'weekly' ? 'Semanal' : p === 'monthly' ? 'Mensual' : 'Anual'}
+                    </button>
+                  ))}
+                </div>
+                <BarChart data={chartData} maxKm={chartMax} height={140} />
+              </section>
+              <div className="sport-routes-list-header">
+                <h3 className="sport-routes-list-title">Rutas</h3>
+              </div>
+              <div className="sport-routes-grid">
+                {state.sportRoutes.map((r) => {
+                  const dur = r.durationMs
+                  const avgSpeed = r.avgSpeedKmh
+                  const paceMinPerKm = dur && r.distanceKm > 0 ? (dur / 60_000) / r.distanceKm : undefined
+                  return (
+                    <div
+                      key={r.id}
+                      className="sport-route-card"
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => setViewRoute(r)}
+                      onKeyDown={(e) => e.key === 'Enter' && setViewRoute(r)}
+                    >
+                      <div className="sport-route-card-left">
+                        <span className="sport-route-distance">{r.distanceKm.toFixed(2)} km</span>
+                        <span className="sport-route-date">{r.startedAt}</span>
+                        <div className="sport-route-meta">
+                          {dur ? formatDuration(dur) : '—'} · {avgSpeed != null ? `${avgSpeed.toFixed(1)} km/h` : paceMinPerKm != null ? formatPace(paceMinPerKm) + '/km' : '—'}
+                          {typeof r.elevationGain === 'number' && ` · ${Math.round(r.elevationGain)} m`}
+                        </div>
+                      </div>
+                      <div className="sport-route-card-right">
+                        <span className="sport-route-open-label">Ver detalle</span>
+                        <span className="sport-route-arrow">›</span>
+                        <button
+                          type="button"
+                          className="sport-route-delete"
+                          onClick={(e) => { e.stopPropagation(); deleteRoute(r.id) }}
+                          aria-label="Eliminar"
+                        >
+                          ×
+                        </button>
                       </div>
                     </div>
-                    <div className="sport-route-card-actions">
-                      <button type="button" className="btn btn-ghost btn-sm" onClick={() => setViewRoute(r)}>Ver mapa</button>
-                      <button type="button" className="sport-route-delete" onClick={() => deleteRoute(r.id)} aria-label="Eliminar">×</button>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
+                  )
+                })}
+              </div>
+            </>
           )}
         </>
       ) : (
@@ -339,11 +434,60 @@ export function Sports({ state, setState }: Props) {
       )}
 
       {viewRoute && (
-        <Modal onClose={() => setViewRoute(null)}>
-          <div className="modal-title">Ruta {viewRoute.distanceKm.toFixed(2)} km</div>
-          <div style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 12 }}>{viewRoute.startedAt}</div>
-          <div ref={viewMapRef} className="sport-map-view" />
-        </Modal>
+        <div className="sport-route-detail-overlay" role="dialog" aria-modal="true" aria-label="Detalle de ruta">
+          <div className="sport-route-detail">
+            <header className="sport-route-detail-header">
+              <button type="button" className="sport-route-detail-back" onClick={() => setViewRoute(null)} aria-label="Cerrar">
+                ← Cerrar
+              </button>
+              <div className="sport-route-detail-title">
+                <span className="sport-route-detail-date">{viewRoute.startedAt}</span>
+                <span className="sport-route-detail-distance">{viewRoute.distanceKm.toFixed(2)} km</span>
+              </div>
+            </header>
+            <div ref={viewMapRef} className="sport-route-detail-map" />
+            <section className="sport-route-detail-stats">
+              <h4 className="sport-route-detail-section-title">Resumen</h4>
+              <div className="sport-route-detail-grid">
+                <div className="sport-route-detail-stat">
+                  <span className="sport-route-detail-stat-value">{viewRoute.distanceKm.toFixed(2)}</span>
+                  <span className="sport-route-detail-stat-unit">km</span>
+                </div>
+                <div className="sport-route-detail-stat">
+                  <span className="sport-route-detail-stat-value">
+                    {viewRoute.durationMs != null ? formatDuration(viewRoute.durationMs) : '—'}
+                  </span>
+                  <span className="sport-route-detail-stat-unit">tiempo</span>
+                </div>
+                <div className="sport-route-detail-stat">
+                  <span className="sport-route-detail-stat-value">
+                    {viewRoute.durationMs != null && viewRoute.distanceKm > 0
+                      ? formatPace((viewRoute.durationMs / 60_000) / viewRoute.distanceKm)
+                      : '—'}
+                  </span>
+                  <span className="sport-route-detail-stat-unit">ritmo /km</span>
+                </div>
+                <div className="sport-route-detail-stat">
+                  <span className="sport-route-detail-stat-value">
+                    {viewRoute.avgSpeedKmh != null ? viewRoute.avgSpeedKmh.toFixed(1) : '—'}
+                  </span>
+                  <span className="sport-route-detail-stat-unit">km/h</span>
+                </div>
+                {typeof viewRoute.elevationGain === 'number' && (
+                  <div className="sport-route-detail-stat">
+                    <span className="sport-route-detail-stat-value">{Math.round(viewRoute.elevationGain)}</span>
+                    <span className="sport-route-detail-stat-unit">m desnivel</span>
+                  </div>
+                )}
+              </div>
+            </section>
+            <div className="sport-route-detail-actions">
+              <button type="button" className="btn btn-danger" onClick={() => { deleteRoute(viewRoute.id); setViewRoute(null) }}>
+                Eliminar ruta
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )
