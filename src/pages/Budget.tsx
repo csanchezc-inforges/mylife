@@ -10,6 +10,12 @@ interface Props {
 }
 
 export function Budget({ state, setState }: Props) {
+  const parseSignedAmount = (raw: string): number => {
+    // Soporta coma decimal y el signo unicode "−" que usan algunos teclados móviles.
+    const normalized = raw.trim().replace(/,/g, '.').replace(/−/g, '-')
+    return parseFloat(normalized)
+  }
+
   const [modal, setModal] = useState<'budget' | 'expense' | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [catFilter, setCatFilter] = useState('all')
@@ -79,7 +85,7 @@ export function Budget({ state, setState }: Props) {
 
   const saveExpense = () => {
     if (!form.name.trim()) { toast('Introduce una descripción'); return }
-    const amount = parseFloat(form.amount)
+    const amount = parseSignedAmount(form.amount)
     if (isNaN(amount) || amount === 0) { toast('Introduce un importe válido (distinto de 0)'); return }
     if (editingId) {
       setState(s => ({
@@ -208,7 +214,7 @@ export function Budget({ state, setState }: Props) {
           <div className="grid-2">
             <div className="input-group">
               <label className="input-label">Importe (€)</label>
-              <input type="number" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} placeholder="0.00" step="0.01" />
+              <input type="text" inputMode="decimal" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} placeholder="ej: -12.50 o 12.50" />
             </div>
             <div className="input-group">
               <label className="input-label">Fecha</label>
