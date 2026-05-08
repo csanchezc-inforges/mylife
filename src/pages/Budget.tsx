@@ -50,14 +50,14 @@ export function Budget({ state, setState }: Props) {
     canvas.width = W * dpr; canvas.height = H * dpr
     ctx.scale(dpr, dpr)
     const vals = keys.map(k => bycat[k])
-    const max = Math.max(...vals)
+    const maxAbs = Math.max(1, ...vals.map(v => Math.abs(v)))
     const barW = Math.min(40, (W - 40) / keys.length - 10)
     ctx.clearRect(0, 0, W, H)
     keys.forEach((k, i) => {
       const x = 20 + i * ((W - 40) / keys.length) + ((W - 40) / keys.length - barW) / 2
-      const barH = (vals[i] / max) * (H - 40)
+      const barH = (Math.abs(vals[i]) / maxAbs) * (H - 40)
       const y = H - 25 - barH
-      const col = CATS[k]?.color || '#94a3b8'
+      const col = vals[i] >= 0 ? (CATS[k]?.color || '#94a3b8') : '#00d4aa'
       ctx.fillStyle = col + '33'
       ctx.beginPath(); ctx.roundRect(x, y, barW, barH, 4); ctx.fill()
       ctx.fillStyle = col
@@ -65,7 +65,8 @@ export function Budget({ state, setState }: Props) {
       ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.font = '15px sans-serif'
       ctx.textAlign = 'center'; ctx.fillText(CATS[k]?.emoji || '?', x + barW / 2, H - 8)
       ctx.fillStyle = 'rgba(255,255,255,0.7)'; ctx.font = '10px DM Sans, sans-serif'
-      ctx.fillText(vals[i].toFixed(0) + '€', x + barW / 2, y - 4)
+      const sign = vals[i] >= 0 ? '' : '+'
+      ctx.fillText(`${sign}${Math.abs(vals[i]).toFixed(0)}€`, x + barW / 2, y - 4)
     })
   }, [monthExpenses])
 
@@ -79,7 +80,7 @@ export function Budget({ state, setState }: Props) {
   const saveExpense = () => {
     if (!form.name.trim()) { toast('Introduce una descripción'); return }
     const amount = parseFloat(form.amount)
-    if (isNaN(amount) || amount <= 0) { toast('Introduce un importe válido'); return }
+    if (isNaN(amount) || amount === 0) { toast('Introduce un importe válido (distinto de 0)'); return }
     if (editingId) {
       setState(s => ({
         ...s,
@@ -156,7 +157,7 @@ export function Budget({ state, setState }: Props) {
 
       {/* Expenses list */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-        <div className="section-label" style={{ margin: 0 }}>Gastos</div>
+        <div className="section-label" style={{ margin: 0 }}>Movimientos</div>
         <button className="btn btn-primary btn-sm" onClick={() => setModal('expense')}>+ Añadir</button>
       </div>
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
@@ -176,7 +177,9 @@ export function Budget({ state, setState }: Props) {
               <div style={{ fontSize: 12, color: 'var(--text2)' }}>{formatDate(e.date)} · {CATS[e.category]?.label || e.category}</div>
             </div>
             <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: 4 }}>
-              <div style={{ fontWeight: 700, fontSize: 16, fontFamily: 'DM Sans, sans-serif', color: 'var(--danger)' }}>-{e.amount.toFixed(2)} €</div>
+              <div style={{ fontWeight: 700, fontSize: 16, fontFamily: 'DM Sans, sans-serif', color: e.amount >= 0 ? 'var(--danger)' : 'var(--success)' }}>
+                {e.amount >= 0 ? '-' : '+'}{Math.abs(e.amount).toFixed(2)} €
+              </div>
               <button type="button" className="btn btn-ghost btn-icon" onClick={() => openEditExpense(e)} style={{ padding: 6 }} aria-label="Editar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} width={18} height={18}><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
               <button type="button" onClick={() => setState(s => ({ ...s, expenses: s.expenses.filter(x => x.id !== e.id) }))} style={{ background: 'none', border: 'none', color: 'var(--text2)', cursor: 'pointer', fontSize: 18 }} aria-label="Eliminar">×</button>
             </div>
